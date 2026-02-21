@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>ICOP Knowledge Graph Demo (Teaching)</title>
+
+  <!-- Cytoscape for graph visualization -->
+  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
+    header { padding: 14px 18px; border-bottom: 1px solid #e6e6e6; }
+    main { display: grid; grid-template-columns: 420px 1fr; gap: 12px; padding: 12px; }
+    .panel { border: 1px solid #e6e6e6; border-radius: 10px; padding: 12px; }
+    .muted { color: #666; font-size: 13px; line-height: 1.4; }
+    textarea { width: 100%; height: 150px; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
+    button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; background: #f7f7f7; }
+    button:hover { background: #f0f0f0; }
+    #cy { height: calc(100vh - 110px); min-height: 520px; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .col { display: flex; flex-direction: column; gap: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #fafafa; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; color: #444; }
+    .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <div>
+        <div style="font-weight:700;">ICOP Knowledge Graph Demo (Teaching Clinical Reasoning)</div>
+        <div class="muted">
+          Type a scenario note → compute similarity (%) to example cases → highlight the diagnosis path and symptom links in the graph.
+          This is a teaching demo with synthetic examples.
+        </div>
+      </div>
+      <div class="pill">Offline • Browser-only</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel col">
+      <div>
+        <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
+        <textarea id="note">
+Unilateral preauricular jaw pain for 3 months. Worse with chewing.
+Clicking in right TMJ. Limited mouth opening. Morning stiffness.
+        </textarea>
+      </div>
+
+      <div class="row">
+        <button id="runBtn">Run similarity + highlight</button>
+        <button id="resetBtn">Reset highlights</button>
+      </div>
+
+      <div class="muted">
+        Similarity uses a simple TF-IDF + cosine method (explainable for students).
+        You can later swap this for embeddings (Gemini / OpenAI) if you want.
+      </div>
+
+      <div>
+        <div style="font-weight:600;">Top similar cases</div>
+        <div id="results"></div>
+      </div>
+
+      <div>
+        <div style="font-weight:600;">Legend</div>
+        <div class="legend muted">
+          <span class="pill">ICOP L1/L2/L3 = diagnosis hierarchy</span>
+          <span class="pill">Symptoms = clinical features</span>
+          <span class="pill">Edges = parent-of / has-symptom</span>
+          <span class="pill">Highlight = retrieved case diagnosis path</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="cy"></div>
+    </section>
+  </main>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
