@@ -103,3 +103,33 @@ const CASE_LIBRARY = [
       "Preauricular stabbing pain infrequent with wide opening/yawning. Feels jaw dislocates; once or twice had difficulty closing after opening wide. Clicking present. Deviation to the left. Mild lateral capsule tenderness and multiple muscle tender points."
   }
 ];
+// Student-facing scenario notes (what appears in the textarea)
+const DEMO_NOTES = [
+  {
+    id: "demo_001",
+    title: "Case 1 — Dru (popping + deflection + trauma history)",
+    note: `Chief Complaint: Bone growth in the mandible; ongoing TMJ concerns.
+
+History: Jaw joint pain since early 2020; worsening over years. Jaw and ear popping predominantly on the right side. Trauma to side of head ~1 year before onset.
+
+Exam: Significant deflection to the right on opening. Pain on right lateral capsule and masseter.`
+  },
+  {
+    id: "demo_002",
+    title: "Case 2 — Splint follow-up + Botox (improving)",
+    note: `Follow-up: Third splint adjustment.
+
+Symptoms: Wears stabilization splint most nights; feels limited benefit. Botox through neurologist (4 rounds) reduced migraines. Overall improvement ~10%.
+
+Exam: Voluntary opening normal. Splint adjusted for balance and comfort.`
+  },
+  {
+    id: "demo_003",
+    title: "Case 3 — Toni (clicking + episodic locking/difficulty closing)",
+    note: `Chief complaint: Clicking/popping and jaw pain.
+
+History: Preauricular severe stabbing pain infrequent with wide opening/yawning (1–2 times/month). Feels jaw dislocates; once or twice had difficulty closing after opening wide.
+
+Exam: Clicking present. Deviation on opening. Mild lateral capsule tenderness; multiple masticatory muscle tender points.`
+  }
+];
