@@ -1,43 +1,61 @@
+// app.js
 // ---------- Graph setup (Cytoscape) ----------
+
+// Safety check: make errors obvious in console
+if (typeof cytoscape === "undefined") {
+  throw new Error("Cytoscape is not loaded. Check the script tag in index.html.");
+}
+if (typeof KG_NODES === "undefined" || typeof KG_EDGES === "undefined") {
+  throw new Error("KG_NODES / KG_EDGES not found. Check that data.js is loaded BEFORE app.js.");
+}
+
 const cy = cytoscape({
   container: document.getElementById("cy"),
+
   elements: [
     ...KG_NODES,
     ...KG_EDGES
   ],
-{
-  selector: "node",
-  style: {
-    "label": "data(label)",
-    "font-size": 12,
-    "text-wrap": "wrap",
-    "text-max-width": 150,
-    "text-valign": "center",
-    "text-halign": "center",
-    "border-width": 2,
-    "border-color": "#333",
-    "background-color": "#f9fafb",
-    "width": "label",
-    "height": "label",
-    "padding": 12
-  }
-},
-{
-  selector: 'node[type="icop"]',
-  style: {
-    "shape": "round-rectangle",
-    "background-color": "#dbeafe",
-    "border-color": "#2563eb"
-  }
-},
-{
-  selector: 'node[type="symptom"]',
-  style: {
-    "shape": "ellipse",
-    "background-color": "#fef3c7",
-    "border-color": "#f59e0b"
-  }
 
+  style: [
+    {
+      selector: "node",
+      style: {
+        "label": "data(label)",
+        "font-size": 12,
+        "text-wrap": "wrap",
+        "text-max-width": 150,
+        "text-valign": "center",
+        "text-halign": "center",
+        "border-width": 2,
+        "border-color": "#333",
+        "background-color": "#f9fafb",
+        "width": 70,
+        "height": 70,
+        "padding": 10
+      }
+    },
+    {
+      selector: 'node[type="icop"]',
+      style: {
+        "shape": "round-rectangle",
+        "background-color": "#dbeafe",
+        "border-color": "#2563eb",
+        "width": 95,
+        "height": 70
+      }
+    },
+    {
+      selector: 'node[type="symptom"]',
+      style: {
+        "shape": "ellipse",
+        "background-color": "#fef3c7",
+        "border-color": "#f59e0b",
+        "width": 78,
+        "height": 78
+      }
+    },
+    {
       selector: "edge",
       style: {
         "curve-style": "bezier",
@@ -52,37 +70,40 @@ const cy = cytoscape({
         "color": "#777"
       }
     },
+
     // Highlight styles
     {
-  selector: ".hlNode",
-  style: {
-    "border-width": 4,
-    "border-color": "#000",
-    "background-color": "#86efac"
-  }
-},
-{
-  selector: ".hlEdge",
-  style: {
-    "line-color": "#000",
-    "target-arrow-color": "#000",
-    "width": 4
-  }
-}
+      selector: ".hlNode",
+      style: {
+        "border-width": 4,
+        "border-color": "#000",
+        "background-color": "#86efac"
+      }
+    },
+    {
+      selector: ".hlEdge",
+      style: {
+        "line-color": "#000",
+        "target-arrow-color": "#000",
+        "width": 4
+      }
+    },
+    {
       selector: ".dim",
       style: {
         "opacity": 0.20
       }
     }
   ],
+
   layout: {
-  name: "breadthfirst",
-  directed: true,
-  padding: 60,
-  spacingFactor: 1.6,
-  levelSeparation: 180,
-  nodeSpacing: 80,
-  animate: false
+    name: "breadthfirst",
+    directed: true,
+    padding: 60,
+    spacingFactor: 1.6,
+    // NOTE: some Cytoscape layouts ignore levelSeparation/nodeSpacing;
+    // they won't crash, but may have no effect.
+    animate: false
   }
 });
 
@@ -101,7 +122,7 @@ function tokenize(text) {
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
-    .filter(t => t && t.length > 2); // drop tiny tokens
+    .filter(t => t && t.length > 2);
 }
 
 function buildVocab(docsTokens) {
@@ -117,7 +138,6 @@ function buildVocab(docsTokens) {
 function termFreq(tokens) {
   const tf = new Map();
   for (const t of tokens) tf.set(t, (tf.get(t) || 0) + 1);
-  // normalize
   const max = Math.max(...tf.values(), 1);
   for (const [k, v] of tf.entries()) tf.set(k, v / max);
   return tf;
@@ -132,7 +152,6 @@ function invDocFreq(docsTokens) {
   }
   const idf = new Map();
   for (const [t, c] of df.entries()) {
-    // smooth
     idf.set(t, Math.log((n + 1) / (c + 1)) + 1);
   }
   return idf;
@@ -168,22 +187,20 @@ function toPercent(x) {
 // ---------- KG highlight logic ----------
 function highlightDiagnosisPathAndSymptoms(diagnosisNodeId) {
   resetHighlights();
-
-  // Dim everything first
   cy.elements().addClass("dim");
 
-  // Highlight diagnosis node
   const diag = cy.getElementById(diagnosisNodeId);
+  if (!diag || diag.empty()) return;
+
   diag.removeClass("dim").addClass("hlNode");
 
-  // Highlight parents up to L1 (reverse direction: child -> parent)
-  // Our edges are parent_of: source(parent)->target(child)
-  // So to find parents: incoming edges with rel=parent_of
+  // Parent chain: follow incoming parent_of edges
   let current = diag;
   while (true) {
     const incomingParentEdges = current.incomers('edge[rel="parent_of"]');
     if (incomingParentEdges.length === 0) break;
-    const e = incomingParentEdges[0]; // demo assumes single parent
+
+    const e = incomingParentEdges[0];
     const parentNode = e.source();
 
     e.removeClass("dim").addClass("hlEdge");
@@ -192,12 +209,11 @@ function highlightDiagnosisPathAndSymptoms(diagnosisNodeId) {
     current = parentNode;
   }
 
-  // Highlight symptom edges and symptom nodes
+  // Symptom edges (outgoing has_symptom)
   const symptomEdges = diag.outgoers('edge[rel="has_symptom"]');
   symptomEdges.removeClass("dim").addClass("hlEdge");
   symptomEdges.targets().removeClass("dim").addClass("hlNode");
 
-  // Fit viewport to highlighted set
   const highlighted = cy.elements(".hlNode, .hlEdge");
   if (highlighted.length > 0) cy.fit(highlighted, 70);
 }
@@ -206,7 +222,6 @@ function highlightDiagnosisPathAndSymptoms(diagnosisNodeId) {
 document.getElementById("runBtn").addEventListener("click", () => {
   const note = document.getElementById("note").value.trim();
 
-  // Build documents: cases + query
   const caseTokens = CASE_LIBRARY.map(c => tokenize(c.text));
   const queryTokens = tokenize(note);
 
@@ -225,7 +240,6 @@ document.getElementById("runBtn").addEventListener("click", () => {
   const top = scored.slice(0, 3);
   renderResults(top);
 
-  // Highlight top diagnosis path
   if (top.length > 0) {
     highlightDiagnosisPathAndSymptoms(top[0].diagnosisNodeId);
   }
@@ -233,7 +247,7 @@ document.getElementById("runBtn").addEventListener("click", () => {
 
 function renderResults(topCases) {
   const div = document.getElementById("results");
-  if (topCases.length === 0) {
+  if (!topCases || topCases.length === 0) {
     div.innerHTML = "<div class='muted'>No results.</div>";
     return;
   }
@@ -242,15 +256,15 @@ function renderResults(topCases) {
     <tr>
       <td>${idx + 1}</td>
       <td>
-        <div style="font-weight:600">${c.title}</div>
+        <div style="font-weight:600">${escapeHtml(c.title)}</div>
         <div class="muted">${escapeHtml(c.text)}</div>
         <div class="muted" style="margin-top:6px;">
-          Diagnosis node: <span class="pill">${c.diagnosisNodeId}</span>
+          Diagnosis node: <span class="pill">${escapeHtml(c.diagnosisNodeId)}</span>
         </div>
       </td>
       <td style="white-space:nowrap; font-weight:700;">${toPercent(c.sim)}%</td>
       <td>
-        <button data-diag="${c.diagnosisNodeId}" data-case="${c.id}">Highlight</button>
+        <button data-diag="${c.diagnosisNodeId}">Highlight</button>
       </td>
     </tr>
   `).join("");
@@ -278,7 +292,7 @@ function renderResults(topCases) {
 }
 
 function escapeHtml(str) {
-  return str.replace(/[&<>"']/g, m => ({
+  return String(str).replace(/[&<>"']/g, m => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
