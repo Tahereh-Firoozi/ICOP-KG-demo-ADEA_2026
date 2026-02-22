@@ -17,6 +17,10 @@ const KG_NODES = [
   { data: { id: "sx_morning_stiffness", label: "Morning stiffness", type: "symptom" } },
   { data: { id: "sx_tender_muscle", label: "Muscle tenderness", type: "symptom" } },
   { data: { id: "sx_joint_tender", label: "TMJ tenderness", type: "symptom" } },
+  { data: { id: "sx_deviation", label: "Deviation/deflection on opening", type: "symptom" } },
+  { data: { id: "sx_locking", label: "Locking / difficulty closing", type: "symptom" } },
+  { data: { id: "sx_trauma", label: "History of trauma", type: "symptom" } },
+  { data: { id: "sx_preauricular_joint_pain", label: "Preauricular (joint-localized) pain", type: "symptom" } },
 ];
 
 const KG_EDGES = [
@@ -39,6 +43,11 @@ const KG_EDGES = [
   { data: { id: "e_disc_sx1", source: "icop_l3_disc", target: "sx_clicking", rel: "has_symptom" } },
   { data: { id: "e_disc_sx2", source: "icop_l3_disc", target: "sx_limited_opening", rel: "has_symptom" } },
   { data: { id: "e_disc_sx3", source: "icop_l3_disc", target: "sx_jaw_pain", rel: "has_symptom" } },
+  { data: { id: "e_disc_sx4", source: "icop_l3_disc", target: "sx_deviation", rel: "has_symptom" } },
+  { data: { id: "e_disc_sx5", source: "icop_l3_disc", target: "sx_locking", rel: "has_symptom" } },
+  { data: { id: "e_disc_sx6", source: "icop_l3_disc", target: "sx_trauma", rel: "has_symptom" } },
+  { data: { id: "e_arth_sx4", source: "icop_l3_arthralgia", target: "sx_preauricular_joint_pain", rel: "has_symptom" } },
+  
 ];
 
 // Example “case library” (synthetic) used for similarity retrieval.
@@ -71,5 +80,26 @@ const CASE_LIBRARY = [
     diagnosisNodeId: "icop_l3_disc",
     text:
       "Joint noise plus limited opening, pain near TMJ, worse with function. Clicking is frequent."
+  }  ,
+  {
+    id: "case_005",
+    title: "Case 005 (Dru: popping + deflection + trauma)",
+    diagnosisNodeId: "icop_l3_disc",
+    text:
+      "Bilateral TMJ concerns since 2020 with worsening. Jaw and ear popping predominantly right side. History of trauma to side of head. Significant deflection to the right on opening. Pain on right lateral capsule and masseter."
+  },
+  {
+    id: "case_006",
+    title: "Case 006 (Follow-up: splint + Botox, partial improvement)",
+    diagnosisNodeId: "icop_l3_myalgia",
+    text:
+      "Follow-up visit for stabilization splint adjustment. Wears splint most nights; feels limited benefit. Botox reduced migraines. Overall improvement about 10%. Voluntary opening normal. Splint adjusted for balance and comfort."
+  },
+  {
+    id: "case_007",
+    title: "Case 007 (Toni: clicking + episodic locking / difficulty closing)",
+    diagnosisNodeId: "icop_l3_arthralgia",
+    text:
+      "Preauricular stabbing pain infrequent with wide opening/yawning. Feels jaw dislocates; once or twice had difficulty closing after opening wide. Clicking present. Deviation to the left. Mild lateral capsule tenderness and multiple muscle tender points."
   }
 ];
