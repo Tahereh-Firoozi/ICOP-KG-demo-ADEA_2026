@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>ICOP Knowledge Graph Demo (Teaching)</title>
-<h4 style="margin-bottom:8px;">ICOP Hierarchy (Top) → Clinical Features (Bottom)</h4>
+
   <!-- Cytoscape for graph visualization -->
   <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 
@@ -17,7 +17,7 @@
     textarea { width: 100%; height: 150px; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
     button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; background: #f7f7f7; }
     button:hover { background: #f0f0f0; }
-    #cy { height: calc(100vh - 110px); min-height: 520px; }
+    #cy { height: calc(100vh - 140px); min-height: 520px; }
     .row { display: flex; gap: 10px; align-items: center; }
     .col { display: flex; flex-direction: column; gap: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
@@ -45,10 +45,8 @@
     <section class="panel col">
       <div>
         <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
-        <textarea id="note">
-Unilateral preauricular jaw pain for 3 months. Worse with chewing.
-Clicking in right TMJ. Limited mouth opening. Morning stiffness.
-        </textarea>
+        <textarea id="note">Unilateral preauricular jaw pain for 3 months. Worse with chewing.
+Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       </div>
 
       <div class="row">
@@ -58,7 +56,6 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.
 
       <div class="muted">
         Similarity uses a simple TF-IDF + cosine method (explainable for students).
-        You can later swap this for embeddings (Gemini / OpenAI) if you want.
       </div>
 
       <div>
@@ -78,10 +75,12 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.
     </section>
 
     <section class="panel">
+      <h4 style="margin:0 0 8px 0;">ICOP Hierarchy (Top) → Clinical Features (Bottom)</h4>
       <div id="cy"></div>
     </section>
   </main>
 
+  <!-- Order matters: data first, then app -->
   <script src="./data.js"></script>
   <script src="./app.js"></script>
 </body>
