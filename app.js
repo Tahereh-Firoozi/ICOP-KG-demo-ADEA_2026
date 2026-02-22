@@ -5,41 +5,39 @@ const cy = cytoscape({
     ...KG_NODES,
     ...KG_EDGES
   ],
-  style: [
-    {
-      selector: "node",
-      style: {
-        "label": "data(label)",
-        "font-size": 11,
-        "text-wrap": "wrap",
-        "text-max-width": 140,
-        "text-valign": "center",
-        "text-halign": "center",
-        "border-width": 1,
-        "border-color": "#bbb",
-        "background-color": "#f3f3f3",
-        "width": 48,
-        "height": 48,
-        "padding": 6
-      }
-    },
-    {
-      selector: 'node[type="icop"]',
-      style: {
-        "shape": "round-rectangle",
-        "background-color": "#eef6ff",
-        "border-color": "#8ab4f8"
-      }
-    },
-    {
-      selector: 'node[type="symptom"]',
-      style: {
-        "shape": "ellipse",
-        "background-color": "#fff7ed",
-        "border-color": "#fdba74"
-      }
-    },
-    {
+{
+  selector: "node",
+  style: {
+    "label": "data(label)",
+    "font-size": 12,
+    "text-wrap": "wrap",
+    "text-max-width": 150,
+    "text-valign": "center",
+    "text-halign": "center",
+    "border-width": 2,
+    "border-color": "#333",
+    "background-color": "#f9fafb",
+    "width": "label",
+    "height": "label",
+    "padding": 12
+  }
+},
+{
+  selector: 'node[type="icop"]',
+  style: {
+    "shape": "round-rectangle",
+    "background-color": "#dbeafe",
+    "border-color": "#2563eb"
+  }
+},
+{
+  selector: 'node[type="symptom"]',
+  style: {
+    "shape": "ellipse",
+    "background-color": "#fef3c7",
+    "border-color": "#f59e0b"
+  }
+
       selector: "edge",
       style: {
         "curve-style": "bezier",
@@ -56,22 +54,21 @@ const cy = cytoscape({
     },
     // Highlight styles
     {
-      selector: ".hlNode",
-      style: {
-        "border-width": 4,
-        "border-color": "#111",
-        "background-color": "#d1fae5"
-      }
-    },
-    {
-      selector: ".hlEdge",
-      style: {
-        "line-color": "#111",
-        "target-arrow-color": "#111",
-        "width": 4
-      }
-    },
-    {
+  selector: ".hlNode",
+  style: {
+    "border-width": 4,
+    "border-color": "#000",
+    "background-color": "#86efac"
+  }
+},
+{
+  selector: ".hlEdge",
+  style: {
+    "line-color": "#000",
+    "target-arrow-color": "#000",
+    "width": 4
+  }
+}
       selector: ".dim",
       style: {
         "opacity": 0.20
@@ -79,10 +76,13 @@ const cy = cytoscape({
     }
   ],
   layout: {
-    name: "breadthfirst",
-    directed: true,
-    padding: 30,
-    spacingFactor: 1.2
+  name: "breadthfirst",
+  directed: true,
+  padding: 60,
+  spacingFactor: 1.6,
+  levelSeparation: 180,
+  nodeSpacing: 80,
+  animate: false
   }
 });
 
