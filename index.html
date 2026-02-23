@@ -8,17 +8,21 @@
   <!-- Cytoscape for graph visualization -->
   <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 
+  <!-- NEW: Tailwind + Chart.js (for commercial UI + visualization) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
     header { padding: 14px 18px; border-bottom: 1px solid #e6e6e6; }
     main { display: grid; grid-template-columns: 420px 1fr; gap: 12px; padding: 12px; }
-    .panel { border: 1px solid #e6e6e6; border-radius: 10px; padding: 12px; }
+    .panel { border: 1px solid #e6e6e6; border-radius: 10px; padding: 12px; background: #fff; }
     .muted { color: #666; font-size: 13px; line-height: 1.4; }
     textarea { width: 100%; height: 150px; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
     button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; background: #f7f7f7; }
     button:hover { background: #f0f0f0; }
     #cy { height: calc(100vh - 140px); min-height: 520px; }
-    .row { display: flex; gap: 10px; align-items: center; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .col { display: flex; flex-direction: column; gap: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
     th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; vertical-align: top; }
@@ -26,10 +30,12 @@
     .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; color: #444; }
     .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 
-    /* NEW: inputs/selects for assessment */
-    input, select {
-      font-size: 14px;
-    }
+    /* inputs/selects for assessment */
+    input, select { font-size: 14px; }
+
+    /* make the whole page feel a bit more "commercial" */
+    body { background: #f8fafc; }
+    header { background: #ffffffcc; backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20; }
   </style>
 </head>
 
@@ -48,6 +54,26 @@
   </header>
 
   <main>
+    <!-- NEW: KPI row (commercial dashboard feel) -->
+    <section style="grid-column: 1 / -1; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+      <div class="panel">
+        <div class="muted">Nodes</div>
+        <div id="kpiNodes" style="font-size:24px;font-weight:700;">—</div>
+      </div>
+      <div class="panel">
+        <div class="muted">Edges</div>
+        <div id="kpiEdges" style="font-size:24px;font-weight:700;">—</div>
+      </div>
+      <div class="panel">
+        <div class="muted">Top similarity</div>
+        <div id="kpiTopSim" style="font-size:24px;font-weight:700;">—</div>
+      </div>
+      <div class="panel">
+        <div class="muted">Highlighted dx</div>
+        <div id="kpiDx" style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+      </div>
+    </section>
+
     <!-- LEFT PANEL -->
     <section class="panel col">
       <div>
@@ -55,7 +81,7 @@
 
         <!-- Case selector -->
         <div class="row" style="margin-bottom:8px;">
-          <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
+          <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc; background:#fff;">
             <option value="">Choose a case…</option>
           </select>
         </div>
@@ -67,6 +93,8 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       <div class="row">
         <button id="runBtn">Run similarity + highlight</button>
         <button id="resetBtn">Reset highlights</button>
+        <!-- NEW: Fit button -->
+        <button id="fitBtn">Fit</button>
       </div>
 
       <div class="muted">
@@ -76,6 +104,12 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       <div>
         <div style="font-weight:600;">Top similar cases</div>
         <div id="results"></div>
+      </div>
+
+      <!-- NEW: Similarity visualization (correct location: AFTER results) -->
+      <div>
+        <div style="font-weight:600;">Similarity chart</div>
+        <canvas id="simChart" height="160" style="margin-top:8px;"></canvas>
       </div>
 
       <div>
@@ -89,7 +123,7 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       </div>
 
       <!-- =========================
-           NEW: Assessment Panel (Mode A: Formative)
+           Assessment Panel (Mode A: Formative)
            ========================= -->
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0;" />
 
@@ -101,22 +135,22 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       <div style="margin-top:10px;">
         <label class="muted" for="studentId"><strong>Student ID</strong> (optional)</label>
         <input id="studentId" type="text"
-          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;"
+          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;background:#fff;"
           placeholder="e.g., CCID or initials" />
       </div>
 
       <div style="margin-top:10px;">
         <label class="muted" for="studentDiagnosis"><strong>Student Diagnosis</strong></label>
         <select id="studentDiagnosis"
-        style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;">
-        <option value="">Select diagnosis…</option>
+          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;background:#fff;">
+          <option value="">Select diagnosis…</option>
         </select>
       </div>
 
       <div style="margin-top:10px;">
         <div class="muted"><strong>Key Features Selected</strong></div>
         <div id="symptomChecklist"
-          style="margin-top:6px;display:grid;grid-template-columns:1fr;gap:6px;max-height:180px;overflow:auto;padding:8px;border:1px solid #eee;border-radius:10px;">
+          style="margin-top:6px;display:grid;grid-template-columns:1fr;gap:6px;max-height:180px;overflow:auto;padding:8px;border:1px solid #eee;border-radius:10px;background:#fff;">
           <!-- checkboxes injected by JS -->
         </div>
       </div>
@@ -124,7 +158,7 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       <div style="margin-top:10px;">
         <label class="muted" for="justification"><strong>Justification</strong> (1–3 sentences)</label>
         <textarea id="justification"
-          style="width:100%;margin-top:6px;height:90px;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:14px;"
+          style="width:100%;margin-top:6px;height:90px;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:14px;background:#fff;"
           placeholder="Explain why this diagnosis fits, referencing key findings."></textarea>
       </div>
 
