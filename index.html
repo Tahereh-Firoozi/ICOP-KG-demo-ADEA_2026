@@ -44,8 +44,15 @@
   <main>
     <section class="panel col">
       <div>
-        <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
-        <textarea id="note">Unilateral preauricular jaw pain for 3 months. Worse with chewing.
+      <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
+      <div class="row" style="margin-bottom:8px;">
+      <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
+      <option value="">Choose a case…</option>
+      </select>
+      <button id="loadCaseBtn">Load</button>
+      </div>
+
+<textarea id="note">Unilateral preauricular jaw pain for 3 months. Worse with chewing.
 Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       </div>
 
