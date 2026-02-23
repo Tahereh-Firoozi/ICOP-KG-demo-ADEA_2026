@@ -8,34 +8,24 @@
   <!-- Cytoscape for graph visualization -->
   <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 
-  <!-- NEW: Tailwind + Chart.js (for commercial UI + visualization) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
-    header { padding: 14px 18px; border-bottom: 1px solid #e6e6e6; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f8fafc; }
+    header { padding: 14px 18px; border-bottom: 1px solid #e6e6e6; background: #ffffffcc; backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20; }
     main { display: grid; grid-template-columns: 420px 1fr; gap: 12px; padding: 12px; }
-    .panel { border: 1px solid #e6e6e6; border-radius: 10px; padding: 12px; background: #fff; }
+    .panel { border: 1px solid #e6e6e6; border-radius: 12px; padding: 12px; background: #fff; }
     .muted { color: #666; font-size: 13px; line-height: 1.4; }
-    textarea { width: 100%; height: 150px; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
+    textarea { width: 100%; height: 160px; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
     button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; background: #f7f7f7; }
     button:hover { background: #f0f0f0; }
-    #cy { height: calc(100vh - 140px); min-height: 520px; }
+    #cy { height: calc(100vh - 170px); min-height: 560px; }
     .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .col { display: flex; flex-direction: column; gap: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
-    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; vertical-align: top; }
-    th { background: #fafafa; }
-    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; color: #444; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; color: #444; background:#fff; }
     .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-
-    /* inputs/selects for assessment */
-    input, select { font-size: 14px; }
-
-    /* make the whole page feel a bit more "commercial" */
-    body { background: #f8fafc; }
-    header { background: #ffffffcc; backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20; }
+    .kpiRow { grid-column: 1 / -1; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .kpiVal { font-size: 24px; font-weight: 800; }
+    .kpiValSm { font-size: 16px; font-weight: 800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .linkBtn { text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
   </style>
 </head>
 
@@ -43,43 +33,46 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
       <div>
-        <div style="font-weight:700;">ICOP Knowledge Graph Demo (Teaching Clinical Reasoning)</div>
+        <div style="font-weight:800;">ICOP Knowledge Graph Demo (Teaching Clinical Reasoning)</div>
         <div class="muted">
           Choose or type a scenario note → retrieve similar cases → highlight diagnosis path and symptom links in the graph.
           This demo uses synthetic examples.
         </div>
       </div>
-      <div class="pill">Offline • Browser-only</div>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <a class="pill linkBtn" href="./assessment.html">Open assessment →</a>
+        <div class="pill">Offline • Browser-only</div>
+      </div>
     </div>
   </header>
 
   <main>
-    <!-- NEW: KPI row (commercial dashboard feel) -->
-    <section style="grid-column: 1 / -1; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+    <!-- KPI row -->
+    <section class="kpiRow">
       <div class="panel">
         <div class="muted">Nodes</div>
-        <div id="kpiNodes" style="font-size:24px;font-weight:700;">—</div>
+        <div id="kpiNodes" class="kpiVal">—</div>
       </div>
       <div class="panel">
         <div class="muted">Edges</div>
-        <div id="kpiEdges" style="font-size:24px;font-weight:700;">—</div>
+        <div id="kpiEdges" class="kpiVal">—</div>
       </div>
       <div class="panel">
         <div class="muted">Top similarity</div>
-        <div id="kpiTopSim" style="font-size:24px;font-weight:700;">—</div>
+        <div id="kpiTopSim" class="kpiVal">—</div>
       </div>
       <div class="panel">
         <div class="muted">Highlighted dx</div>
-        <div id="kpiDx" style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        <div id="kpiDx" class="kpiValSm">—</div>
       </div>
     </section>
 
-    <!-- LEFT PANEL -->
+    <!-- LEFT PANEL (main page only: scenario + controls) -->
     <section class="panel col">
       <div>
-        <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
+        <div style="font-weight:700; margin-bottom:6px;">Scenario case note</div>
 
-        <!-- Case selector -->
         <div class="row" style="margin-bottom:8px;">
           <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc; background:#fff;">
             <option value="">Choose a case…</option>
@@ -93,27 +86,18 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       <div class="row">
         <button id="runBtn">Run similarity + highlight</button>
         <button id="resetBtn">Reset highlights</button>
-        <!-- NEW: Fit button -->
         <button id="fitBtn">Fit</button>
       </div>
 
       <div class="muted">
         Similarity uses a simple TF-IDF + cosine method (explainable for students).
+        <span style="display:block;margin-top:6px;">
+          Assessment is on a separate page to keep the main view uncluttered.
+        </span>
       </div>
 
       <div>
-        <div style="font-weight:600;">Top similar cases</div>
-        <div id="results"></div>
-      </div>
-
-      <!-- NEW: Similarity visualization (correct location: AFTER results) -->
-      <div>
-        <div style="font-weight:600;">Similarity chart</div>
-        <canvas id="simChart" height="160" style="margin-top:8px;"></canvas>
-      </div>
-
-      <div>
-        <div style="font-weight:600;">Legend</div>
+        <div style="font-weight:700;">Legend</div>
         <div class="legend muted">
           <span class="pill">ICOP L1/L2/L3 = diagnosis hierarchy</span>
           <span class="pill">Symptoms = clinical features</span>
@@ -122,55 +106,20 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
         </div>
       </div>
 
-      <!-- =========================
-           Assessment Panel (Mode A: Formative)
-           ========================= -->
-      <hr style="border:none;border-top:1px solid #eee;margin:12px 0;" />
+      <!-- Keep hidden placeholders so app.js won't break even if it still references them -->
+      <div id="results" style="display:none;"></div>
+      <canvas id="simChart" style="display:none;"></canvas>
 
-      <div style="font-weight:700;">Assessment (Clinical Reasoning)</div>
-      <div class="muted">
-        Students submit diagnosis + key features + justification. Immediate formative feedback is shown after submission.
+      <!-- If your app.js still references these assessment IDs, keep them hidden here too -->
+      <div style="display:none;">
+        <input id="studentId" />
+        <select id="studentDiagnosis"></select>
+        <div id="symptomChecklist"></div>
+        <textarea id="justification"></textarea>
+        <button id="submitAssessmentBtn"></button>
+        <button id="exportCsvBtn"></button>
+        <div id="feedbackBox"></div>
       </div>
-
-      <div style="margin-top:10px;">
-        <label class="muted" for="studentId"><strong>Student ID</strong> (optional)</label>
-        <input id="studentId" type="text"
-          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;background:#fff;"
-          placeholder="e.g., CCID or initials" />
-      </div>
-
-      <div style="margin-top:10px;">
-        <label class="muted" for="studentDiagnosis"><strong>Student Diagnosis</strong></label>
-        <select id="studentDiagnosis"
-          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;background:#fff;">
-          <option value="">Select diagnosis…</option>
-        </select>
-      </div>
-
-      <div style="margin-top:10px;">
-        <div class="muted"><strong>Key Features Selected</strong></div>
-        <div id="symptomChecklist"
-          style="margin-top:6px;display:grid;grid-template-columns:1fr;gap:6px;max-height:180px;overflow:auto;padding:8px;border:1px solid #eee;border-radius:10px;background:#fff;">
-          <!-- checkboxes injected by JS -->
-        </div>
-      </div>
-
-      <div style="margin-top:10px;">
-        <label class="muted" for="justification"><strong>Justification</strong> (1–3 sentences)</label>
-        <textarea id="justification"
-          style="width:100%;margin-top:6px;height:90px;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:14px;background:#fff;"
-          placeholder="Explain why this diagnosis fits, referencing key findings."></textarea>
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <button id="submitAssessmentBtn">Submit assessment</button>
-        <button id="exportCsvBtn">Export CSV</button>
-      </div>
-
-      <div id="feedbackBox" class="muted" style="margin-top:10px;"></div>
-      <!-- =========================
-           END Assessment Panel
-           ========================= -->
     </section>
 
     <!-- RIGHT PANEL -->
@@ -181,7 +130,8 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
   </main>
 
   <!-- Order matters: data first, then app -->
-  <script src="./data.js?v=assess2"></script>
-  <script src="./app.js?v=assess2"></script>
+  <!-- Bump version to force GitHub Pages cache refresh -->
+  <script src="./data.js?v=assess4"></script>
+  <script src="./app.js?v=assess4"></script>
 </body>
 </html>
