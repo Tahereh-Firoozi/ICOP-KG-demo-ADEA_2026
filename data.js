@@ -132,4 +132,12 @@ History: Preauricular severe stabbing pain infrequent with wide opening/yawning 
 
 Exam: Clicking present. Deviation on opening. Mild lateral capsule tenderness; multiple masticatory muscle tender points.`
   }
+
+];
+  // Confusable alternative mapping for formative feedback
+const CONFUSABLE_MAP = {
+  icop_l3_myalgia: "icop_l3_arthralgia",
+  icop_l3_arthralgia: "icop_l3_myalgia",
+  icop_l3_disc: "icop_l3_arthralgia"
+}
 ];
