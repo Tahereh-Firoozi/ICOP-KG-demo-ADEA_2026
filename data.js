@@ -1,6 +1,10 @@
+// data.js
 // Mini ICOP-like hierarchy + symptom nodes (DEMO subset)
 // You can expand nodes/edges as needed.
 
+// -----------------------------
+// Knowledge Graph Nodes
+// -----------------------------
 const KG_NODES = [
   // ICOP hierarchy nodes
   { data: { id: "icop_l1_msk", label: "ICOP L1: Musculoskeletal orofacial pain", type: "icop" } },
@@ -20,9 +24,12 @@ const KG_NODES = [
   { data: { id: "sx_deviation", label: "Deviation/deflection on opening", type: "symptom" } },
   { data: { id: "sx_locking", label: "Locking / difficulty closing", type: "symptom" } },
   { data: { id: "sx_trauma", label: "History of trauma", type: "symptom" } },
-  { data: { id: "sx_preauricular_joint_pain", label: "Preauricular (joint-localized) pain", type: "symptom" } },
+  { data: { id: "sx_preauricular_joint_pain", label: "Preauricular (joint-localized) pain", type: "symptom" } }
 ];
 
+// -----------------------------
+// Knowledge Graph Edges
+// -----------------------------
 const KG_EDGES = [
   // Hierarchy edges
   { data: { id: "e_l1_l2", source: "icop_l1_msk", target: "icop_l2_tmd", rel: "parent_of" } },
@@ -39,71 +46,67 @@ const KG_EDGES = [
   { data: { id: "e_arth_sx1", source: "icop_l3_arthralgia", target: "sx_jaw_pain", rel: "has_symptom" } },
   { data: { id: "e_arth_sx2", source: "icop_l3_arthralgia", target: "sx_joint_tender", rel: "has_symptom" } },
   { data: { id: "e_arth_sx3", source: "icop_l3_arthralgia", target: "sx_chewing_worse", rel: "has_symptom" } },
+  { data: { id: "e_arth_sx4", source: "icop_l3_arthralgia", target: "sx_preauricular_joint_pain", rel: "has_symptom" } },
 
   { data: { id: "e_disc_sx1", source: "icop_l3_disc", target: "sx_clicking", rel: "has_symptom" } },
   { data: { id: "e_disc_sx2", source: "icop_l3_disc", target: "sx_limited_opening", rel: "has_symptom" } },
   { data: { id: "e_disc_sx3", source: "icop_l3_disc", target: "sx_jaw_pain", rel: "has_symptom" } },
   { data: { id: "e_disc_sx4", source: "icop_l3_disc", target: "sx_deviation", rel: "has_symptom" } },
   { data: { id: "e_disc_sx5", source: "icop_l3_disc", target: "sx_locking", rel: "has_symptom" } },
-  { data: { id: "e_disc_sx6", source: "icop_l3_disc", target: "sx_trauma", rel: "has_symptom" } },
-  { data: { id: "e_arth_sx4", source: "icop_l3_arthralgia", target: "sx_preauricular_joint_pain", rel: "has_symptom" } },
-  
+  { data: { id: "e_disc_sx6", source: "icop_l3_disc", target: "sx_trauma", rel: "has_symptom" } }
 ];
 
-// Example “case library” (synthetic) used for similarity retrieval.
-// diagnosisNodeId tells the graph what to highlight when retrieved.
+// -----------------------------
+// Case Library for similarity retrieval (teaching demo)
+// -----------------------------
 const CASE_LIBRARY = [
   {
     id: "case_001",
     title: "Case 001 (Myalgia-like)",
     diagnosisNodeId: "icop_l3_myalgia",
-    text:
-      "Unilateral jaw pain. Worse with chewing. Morning stiffness. Muscle tenderness. No strong joint noise."
+    text: "Unilateral jaw pain. Worse with chewing. Morning stiffness. Muscle tenderness. No strong joint noise."
   },
   {
     id: "case_002",
     title: "Case 002 (Disc displacement-like)",
     diagnosisNodeId: "icop_l3_disc",
-    text:
-      "Clicking in TMJ with opening and chewing. Intermittent limitation of opening. Joint noise prominent."
+    text: "Clicking in TMJ with opening and chewing. Intermittent limitation of opening. Joint noise prominent."
   },
   {
     id: "case_003",
     title: "Case 003 (Arthralgia-like)",
     diagnosisNodeId: "icop_l3_arthralgia",
-    text:
-      "Preauricular pain with chewing and palpation. TMJ tenderness. Pain localized to the joint."
+    text: "Preauricular pain with chewing and palpation. TMJ tenderness. Pain localized to the joint."
   },
   {
     id: "case_004",
     title: "Case 004 (Mixed TMD features)",
     diagnosisNodeId: "icop_l3_disc",
-    text:
-      "Joint noise plus limited opening, pain near TMJ, worse with function. Clicking is frequent."
-  }  ,
+    text: "Joint noise plus limited opening, pain near TMJ, worse with function. Clicking is frequent."
+  },
   {
     id: "case_005",
     title: "Case 005 (Dru: popping + deflection + trauma)",
     diagnosisNodeId: "icop_l3_disc",
-    text:
-      "Bilateral TMJ concerns since 2020 with worsening. Jaw and ear popping predominantly right side. History of trauma to side of head. Significant deflection to the right on opening. Pain on right lateral capsule and masseter."
+    text: "Jaw and ear popping predominantly right side. History of trauma. Significant deflection to the right on opening. Pain on right lateral capsule and masseter."
   },
   {
     id: "case_006",
     title: "Case 006 (Follow-up: splint + Botox, partial improvement)",
     diagnosisNodeId: "icop_l3_myalgia",
-    text:
-      "Follow-up visit for stabilization splint adjustment. Wears splint most nights; feels limited benefit. Botox reduced migraines. Overall improvement about 10%. Voluntary opening normal. Splint adjusted for balance and comfort."
+    text: "Follow-up for stabilization splint adjustment. Wears splint most nights; limited benefit. Botox reduced migraines. Overall improvement ~10%. Voluntary opening normal."
   },
   {
     id: "case_007",
     title: "Case 007 (Toni: clicking + episodic locking / difficulty closing)",
-    diagnosisNodeId: "icop_l3_arthralgia",
-    text:
-      "Preauricular stabbing pain infrequent with wide opening/yawning. Feels jaw dislocates; once or twice had difficulty closing after opening wide. Clicking present. Deviation to the left. Mild lateral capsule tenderness and multiple muscle tender points."
+    diagnosisNodeId: "icop_l3_disc",
+    text: "Clicking present. Episodic locking/difficulty closing after wide opening. Deviation on opening. Preauricular pain infrequent with yawning/wide opening."
   }
 ];
-// Student-facing scenario notes (what appears in the textarea)
+
+// -----------------------------
+// Student-facing scenario notes + ANSWER KEY for assessment
+// -----------------------------
 const DEMO_NOTES = [
   {
     id: "demo_001",
@@ -112,7 +115,9 @@ const DEMO_NOTES = [
 
 History: Jaw joint pain since early 2020; worsening over years. Jaw and ear popping predominantly on the right side. Trauma to side of head ~1 year before onset.
 
-Exam: Significant deflection to the right on opening. Pain on right lateral capsule and masseter.`
+Exam: Significant deflection to the right on opening. Pain on right lateral capsule and masseter.`,
+    goldDiagnosisNodeId: "icop_l3_disc",
+    goldSymptoms: ["sx_clicking", "sx_deviation", "sx_trauma", "sx_jaw_pain"]
   },
   {
     id: "demo_002",
@@ -121,7 +126,9 @@ Exam: Significant deflection to the right on opening. Pain on right lateral caps
 
 Symptoms: Wears stabilization splint most nights; feels limited benefit. Botox through neurologist (4 rounds) reduced migraines. Overall improvement ~10%.
 
-Exam: Voluntary opening normal. Splint adjusted for balance and comfort.`
+Exam: Voluntary opening normal. Splint adjusted for balance and comfort.`,
+    goldDiagnosisNodeId: "icop_l3_myalgia",
+    goldSymptoms: ["sx_jaw_pain", "sx_tender_muscle"]
   },
   {
     id: "demo_003",
@@ -130,14 +137,34 @@ Exam: Voluntary opening normal. Splint adjusted for balance and comfort.`
 
 History: Preauricular severe stabbing pain infrequent with wide opening/yawning (1–2 times/month). Feels jaw dislocates; once or twice had difficulty closing after opening wide.
 
-Exam: Clicking present. Deviation on opening. Mild lateral capsule tenderness; multiple masticatory muscle tender points.`
+Exam: Clicking present. Deviation on opening. Mild lateral capsule tenderness; multiple masticatory muscle tender points.`,
+    goldDiagnosisNodeId: "icop_l3_disc",
+    goldSymptoms: ["sx_clicking", "sx_locking", "sx_deviation", "sx_jaw_pain"]
   }
-
 ];
-  // Confusable alternative mapping for formative feedback
+
+// -----------------------------
+// Symptom checklist options shown to students (IDs must match KG symptom node IDs)
+// -----------------------------
+const SYMPTOM_OPTIONS = [
+  { id: "sx_jaw_pain", label: "Jaw / preauricular pain" },
+  { id: "sx_chewing_worse", label: "Worse with chewing" },
+  { id: "sx_clicking", label: "Clicking / joint noise" },
+  { id: "sx_limited_opening", label: "Limited opening" },
+  { id: "sx_morning_stiffness", label: "Morning stiffness" },
+  { id: "sx_tender_muscle", label: "Muscle tenderness" },
+  { id: "sx_joint_tender", label: "TMJ tenderness" },
+  { id: "sx_deviation", label: "Deviation/deflection on opening" },
+  { id: "sx_locking", label: "Locking / difficulty closing" },
+  { id: "sx_trauma", label: "History of trauma" },
+  { id: "sx_preauricular_joint_pain", label: "Preauricular (joint-localized) pain" }
+];
+
+// -----------------------------
+// Confusable alternative mapping for formative feedback (fallback)
+// -----------------------------
 const CONFUSABLE_MAP = {
   icop_l3_myalgia: "icop_l3_arthralgia",
   icop_l3_arthralgia: "icop_l3_myalgia",
   icop_l3_disc: "icop_l3_arthralgia"
-}
-];
+};
