@@ -25,16 +25,22 @@
     th { background: #fafafa; }
     .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; color: #444; }
     .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+
+    /* NEW: inputs/selects for assessment */
+    input, select {
+      font-size: 14px;
+    }
   </style>
 </head>
+
 <body>
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
       <div>
         <div style="font-weight:700;">ICOP Knowledge Graph Demo (Teaching Clinical Reasoning)</div>
         <div class="muted">
-          Type a scenario note → compute similarity (%) to example cases → highlight the diagnosis path and symptom links in the graph.
-          This is a teaching demo with synthetic examples.
+          Choose or type a scenario note → retrieve similar cases → highlight diagnosis path and symptom links in the graph.
+          This demo uses synthetic examples.
         </div>
       </div>
       <div class="pill">Offline • Browser-only</div>
@@ -42,19 +48,19 @@
   </header>
 
   <main>
+    <!-- LEFT PANEL -->
     <section class="panel col">
       <div>
-      <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
-      <div class="row" style="margin-bottom:8px;">
-      <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
-      <option value="">Choose a case…</option>
-      </select>
-      <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
-      <option value="">Choose a case…</option>
-      </select>
-      </div>
+        <div style="font-weight:600; margin-bottom:6px;">Scenario case note</div>
 
-<textarea id="note">Unilateral preauricular jaw pain for 3 months. Worse with chewing.
+        <!-- Case selector -->
+        <div class="row" style="margin-bottom:8px;">
+          <select id="caseSelect" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
+            <option value="">Choose a case…</option>
+          </select>
+        </div>
+
+        <textarea id="note">Unilateral preauricular jaw pain for 3 months. Worse with chewing.
 Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
       </div>
 
@@ -81,8 +87,62 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
           <span class="pill">Highlight = retrieved case diagnosis path</span>
         </div>
       </div>
+
+      <!-- =========================
+           NEW: Assessment Panel (Mode A: Formative)
+           ========================= -->
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0;" />
+
+      <div style="font-weight:700;">Assessment (Clinical Reasoning)</div>
+      <div class="muted">
+        Students submit diagnosis + key features + justification. Immediate formative feedback is shown after submission.
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="muted" for="studentId"><strong>Student ID</strong> (optional)</label>
+        <input id="studentId" type="text"
+          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;"
+          placeholder="e.g., CCID or initials" />
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="muted" for="studentDiagnosis"><strong>Student Diagnosis</strong></label>
+        <select id="studentDiagnosis"
+          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #ccc;">
+          <option value="">Select diagnosis…</option>
+          <option value="icop_l3_myalgia">ICOP L3: Myalgia</option>
+          <option value="icop_l3_arthralgia">ICOP L3: Arthralgia</option>
+          <option value="icop_l3_disc">ICOP L3: Disc displacement (w/ reduction)</option>
+        </select>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="muted"><strong>Key Features Selected</strong></div>
+        <div id="symptomChecklist"
+          style="margin-top:6px;display:grid;grid-template-columns:1fr;gap:6px;max-height:180px;overflow:auto;padding:8px;border:1px solid #eee;border-radius:10px;">
+          <!-- checkboxes injected by JS -->
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="muted" for="justification"><strong>Justification</strong> (1–3 sentences)</label>
+        <textarea id="justification"
+          style="width:100%;margin-top:6px;height:90px;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:14px;"
+          placeholder="Explain why this diagnosis fits, referencing key findings."></textarea>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="submitAssessmentBtn">Submit assessment</button>
+        <button id="exportCsvBtn">Export CSV</button>
+      </div>
+
+      <div id="feedbackBox" class="muted" style="margin-top:10px;"></div>
+      <!-- =========================
+           END Assessment Panel
+           ========================= -->
     </section>
 
+    <!-- RIGHT PANEL -->
     <section class="panel">
       <h4 style="margin:0 0 8px 0;">ICOP Hierarchy (Top) → Clinical Features (Bottom)</h4>
       <div id="cy"></div>
@@ -90,7 +150,7 @@ Clicking in right TMJ. Limited mouth opening. Morning stiffness.</textarea>
   </main>
 
   <!-- Order matters: data first, then app -->
-  <script src="./data.js?v=20260222d"></script>
-  <script src="./app.js?v=20260222cd"></script>
+  <script src="./data.js?v=assess2"></script>
+  <script src="./app.js?v=assess2"></script>
 </body>
 </html>
