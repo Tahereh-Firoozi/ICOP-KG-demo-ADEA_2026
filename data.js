@@ -95,6 +95,7 @@ const KG_EDGES = [
   { data: { id: "e_3_2_dd", source: "icop_3_2", target: "icop_3_2_2", rel: "parent_of" } },
   { data: { id: "e_3_2_djd", source: "icop_3_2", target: "icop_3_2_3", rel: "parent_of" } },
   { data: { id: "e_3_2_sub", source: "icop_3_2", target: "icop_3_2_4", rel: "parent_of" } },
+  
 
   // Disc displacement deeper
   { data: { id: "e_dd_wr", source: "icop_3_2_2", target: "icop_3_2_2_1", rel: "parent_of" } },
@@ -116,6 +117,8 @@ const KG_EDGES = [
   { data: { id: "e_ptmj_sx1", source: "icop_3_1_2", target: "sx_preauricular_joint_pain", rel: "has_symptom" } },
   { data: { id: "e_ptmj_sx2", source: "icop_3_1_2", target: "sx_chewing_worse", rel: "has_symptom" } },
   { data: { id: "e_ptmj_sx3", source: "icop_3_1_2", target: "sx_joint_tender", rel: "has_symptom" } },
+  { data: { id: "e_3_2_sx_trauma", source: "icop_3_2", target: "sx_trauma", rel: "has_symptom" } },
+
 
   // Disc displacement w/ reduction
   { data: { id: "e_ddwr_sx1", source: "icop_3_2_2_1", target: "sx_clicking", rel: "has_symptom" } },
@@ -130,6 +133,7 @@ const KG_EDGES = [
   { data: { id: "e_ddwor_sx1", source: "icop_3_2_2_2", target: "sx_locking", rel: "has_symptom" } },
   { data: { id: "e_ddwor_sx2", source: "icop_3_2_2_2", target: "sx_limited_opening", rel: "has_symptom" } },
   { data: { id: "e_ddwor_sx3", source: "icop_3_2_2_2", target: "sx_chewing_worse", rel: "has_symptom" } },
+  { data: { id: "e_ddwr_sx_trauma", source: "icop_3_2_2_1", target: "sx_trauma", rel: "has_symptom" } },
 
   // Arthritis
   { data: { id: "e_ar_sx1", source: "icop_3_2_1", target: "sx_preauricular_joint_pain", rel: "has_symptom" } },
