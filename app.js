@@ -8,7 +8,39 @@ if (typeof cytoscape === "undefined") {
 if (typeof KG_NODES === "undefined" || typeof KG_EDGES === "undefined") {
   throw new Error("KG_NODES / KG_EDGES not found. Check that data.js is loaded BEFORE app.js.");
 }
+// ---------- Case selector (student demo) ----------
+function populateCaseSelector() {
+  const sel = document.getElementById("caseSelect");
+  const loadBtn = document.getElementById("loadCaseBtn");
+  if (!sel || !loadBtn) return;
 
+  if (typeof DEMO_NOTES === "undefined") {
+    console.warn("DEMO_NOTES not found. Did you add it to data.js?");
+    return;
+  }
+
+  // Fill dropdown
+  for (const item of DEMO_NOTES) {
+    const opt = document.createElement("option");
+    opt.value = item.id;
+    opt.textContent = item.title;
+    sel.appendChild(opt);
+  }
+
+  // Load selected note
+  loadBtn.addEventListener("click", () => {
+    const id = sel.value;
+    const chosen = DEMO_NOTES.find(x => x.id === id);
+    if (!chosen) return;
+
+    document.getElementById("note").value = chosen.note;
+    resetHighlights();
+    document.getElementById("results").innerHTML = "";
+  });
+}
+
+// Call once after page load
+populateCaseSelector();
 const cy = cytoscape({
   container: document.getElementById("cy"),
 
