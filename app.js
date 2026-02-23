@@ -1,8 +1,9 @@
 // app.js
 // Works with your HTML IDs:
-// caseSelect, note, runBtn, resetBtn, results,
+// caseSelect, note, runBtn, resetBtn, fitBtn, results,
 // studentId, studentDiagnosis, symptomChecklist, justification,
-// submitAssessmentBtn, exportCsvBtn, feedbackBox, cy
+// submitAssessmentBtn, exportCsvBtn, feedbackBox, cy,
+// kpiNodes, kpiEdges, kpiTopSim, kpiDx, simChart
 //
 // Requires data.js globals:
 // KG_NODES, KG_EDGES, CASE_LIBRARY, DEMO_NOTES
@@ -30,7 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
       {
         selector: "node",
         style: {
-          "label": "data(label)",
+          label: "data(label)",
           "text-wrap": "wrap",
           "text-max-width": 260,
           "text-valign": "center",
@@ -39,11 +40,11 @@ window.addEventListener("DOMContentLoaded", () => {
           "font-weight": 700,
           "border-width": 3,
           "border-color": "#0f172a",
-          "color": "#0f172a",
+          color: "#0f172a",
           "background-color": "#fff",
-          "width": 180,
-          "height": 120,
-          "padding": 14
+          width: 180,
+          height: 120,
+          padding: 14
         }
       },
 
@@ -51,28 +52,28 @@ window.addEventListener("DOMContentLoaded", () => {
       {
         selector: 'node[type="icop"]',
         style: {
-          "shape": "round-rectangle",
+          shape: "round-rectangle",
           "border-width": 4
         }
       },
 
       // Level-based colors (requires data(level) for ICOP nodes)
-      { selector: 'node[type="icop"][level = 1]', style: { "background-color": "#e0f2fe", "border-color": "#0284c7", "font-size": 22, "width": 260, "height": 150 } },
-      { selector: 'node[type="icop"][level = 2]', style: { "background-color": "#dcfce7", "border-color": "#16a34a", "font-size": 20, "width": 240, "height": 140 } },
-      { selector: 'node[type="icop"][level = 3]', style: { "background-color": "#fef9c3", "border-color": "#ca8a04", "font-size": 18, "width": 225, "height": 135 } },
-      { selector: 'node[type="icop"][level = 4]', style: { "background-color": "#fae8ff", "border-color": "#a855f7", "font-size": 17, "width": 215, "height": 132 } },
-      { selector: 'node[type="icop"][level >= 5]', style: { "background-color": "#ffe4e6", "border-color": "#e11d48", "font-size": 16, "width": 210, "height": 128 } },
+      { selector: 'node[type="icop"][level = 1]', style: { "background-color": "#e0f2fe", "border-color": "#0284c7", "font-size": 22, width: 260, height: 150 } },
+      { selector: 'node[type="icop"][level = 2]', style: { "background-color": "#dcfce7", "border-color": "#16a34a", "font-size": 20, width: 240, height: 140 } },
+      { selector: 'node[type="icop"][level = 3]', style: { "background-color": "#fef9c3", "border-color": "#ca8a04", "font-size": 18, width: 225, height: 135 } },
+      { selector: 'node[type="icop"][level = 4]', style: { "background-color": "#fae8ff", "border-color": "#a855f7", "font-size": 17, width: 215, height: 132 } },
+      { selector: 'node[type="icop"][level >= 5]', style: { "background-color": "#ffe4e6", "border-color": "#e11d48", "font-size": 16, width: 210, height: 128 } },
 
       // Symptoms
       {
         selector: 'node[type="symptom"]',
         style: {
-          "shape": "ellipse",
+          shape: "ellipse",
           "background-color": "#fff7ed",
           "border-color": "#fb923c",
           "border-width": 3,
-          "width": 155,
-          "height": 155,
+          width: 155,
+          height: 155,
           "font-size": 15,
           "font-weight": 700
         }
@@ -83,25 +84,25 @@ window.addEventListener("DOMContentLoaded", () => {
         selector: "edge",
         style: {
           "curve-style": "bezier",
-          "width": 3,
+          width: 3,
           "line-color": "#cbd5e1",
           "target-arrow-shape": "triangle",
           "target-arrow-color": "#cbd5e1",
-          "label": "data(rel)",
+          label: "data(rel)",
           "font-size": 12,
           "text-rotation": "autorotate",
           "text-margin-y": -10,
-          "color": "#64748b"
+          color: "#64748b"
         }
       },
-      { selector: 'edge[rel="parent_of"]', style: { "width": 5, "line-color": "#94a3b8", "target-arrow-color": "#94a3b8" } },
+      { selector: 'edge[rel="parent_of"]', style: { width: 5, "line-color": "#94a3b8", "target-arrow-color": "#94a3b8" } },
       { selector: 'edge[rel="has_symptom"]', style: { "line-style": "dashed", "line-dash-pattern": [6, 6] } },
       { selector: 'edge[rel="risk_factor"]', style: { "line-style": "dotted" } },
 
       // Highlighting
       { selector: ".hlNode", style: { "border-width": 7, "border-color": "#000", "background-color": "#86efac" } },
-      { selector: ".hlEdge", style: { "line-color": "#000", "target-arrow-color": "#000", "width": 7 } },
-      { selector: ".dim", style: { "opacity": 0.15 } }
+      { selector: ".hlEdge", style: { "line-color": "#000", "target-arrow-color": "#000", width: 7 } },
+      { selector: ".dim", style: { opacity: 0.15 } }
     ],
 
     layout: {
@@ -115,6 +116,21 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ---------- Helpers ----------
   const $ = (id) => document.getElementById(id);
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[m]));
+  }
+
+  function nodeLabel(id) {
+    const n = cy.getElementById(id);
+    return (!n || n.empty()) ? id : (n.data("label") || id).replace(/\n/g, " ");
+  }
 
   function resetHighlights() {
     cy.elements().removeClass("hlNode hlEdge dim");
@@ -150,29 +166,24 @@ window.addEventListener("DOMContentLoaded", () => {
     if (highlighted.length > 0) cy.fit(highlighted, 90);
   }
 
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, (m) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[m]));
-  }
+  // ---------- KPIs + Fit ----------
+  if ($("kpiNodes")) $("kpiNodes").textContent = String(cy.nodes().length);
+  if ($("kpiEdges")) $("kpiEdges").textContent = String(cy.edges().length);
+  if ($("kpiTopSim")) $("kpiTopSim").textContent = "—";
+  if ($("kpiDx")) $("kpiDx").textContent = "—";
 
-  // ---------- Build diagnosis list for assessment (from ICOP nodes that have feature edges) ----------
+  $("fitBtn")?.addEventListener("click", () => cy.fit(cy.elements(), 80));
+
+  // ---------- Build diagnosis list for assessment ----------
   function getAssessableDxNodes() {
     const icopNodes = cy.nodes('node[type="icop"]');
     const dx = [];
 
     icopNodes.forEach(n => {
       const out = n.outgoers('edge[rel="has_symptom"], edge[rel="risk_factor"]');
-      if (out && out.length > 0) {
-        dx.push({ id: n.id(), label: n.data("label") });
-      }
+      if (out && out.length > 0) dx.push({ id: n.id(), label: n.data("label") });
     });
 
-    // sort: by label
     dx.sort((a, b) => a.label.localeCompare(b.label));
     return dx;
   }
@@ -192,10 +203,8 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ---------- Symptom checklist (from symptom nodes) ----------
+  // ---------- Symptom checklist ----------
   function getAllFeatureNodes() {
-    // We’ll allow selecting symptom nodes including trauma if you kept it as type=symptom.
-    // If you later make trauma a different type, adjust the selector accordingly.
     const nodes = cy.nodes('node[type="symptom"]');
     const list = [];
     nodes.forEach(n => list.push({ id: n.id(), label: n.data("label") }));
@@ -231,7 +240,6 @@ window.addEventListener("DOMContentLoaded", () => {
     return Array.from(box.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
   }
 
-  // Expected features for a diagnosis (from graph)
   function getDiagnosisFeatureSet(dxNodeId) {
     const dx = cy.getElementById(dxNodeId);
     if (!dx || dx.empty()) return [];
@@ -262,11 +270,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     return best;
-  }
-
-  function nodeLabel(id) {
-    const n = cy.getElementById(id);
-    return (!n || n.empty()) ? id : (n.data("label") || id).replace(/\n/g, " ");
   }
 
   // ---------- Teaching: similarity retrieval ----------
@@ -332,12 +335,41 @@ window.addEventListener("DOMContentLoaded", () => {
     return Math.round(x * 1000) / 10;
   }
 
+  // ---------- Chart + KPI top similarity ----------
+  let simChart = null;
+
+  function updateSimChart(topCases) {
+    const canvas = $("simChart");
+    if (!canvas) return;
+
+    const labels = (topCases || []).map((c, i) => `#${i + 1}`);
+    const data = (topCases || []).map(c => Math.round(c.sim * 100));
+
+    if (!simChart) {
+      simChart = new Chart(canvas, {
+        type: "bar",
+        data: { labels, datasets: [{ label: "Similarity (%)", data }] },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 100 } }
+        }
+      });
+    } else {
+      simChart.data.labels = labels;
+      simChart.data.datasets[0].data = data;
+      simChart.update();
+    }
+
+    if ($("kpiTopSim")) $("kpiTopSim").textContent = topCases?.length ? `${Math.round(topCases[0].sim * 100)}%` : "—";
+  }
+
   function renderResults(topCases) {
     const div = $("results");
     if (!div) return;
 
     if (!topCases || topCases.length === 0) {
       div.innerHTML = "<div class='muted'>No results.</div>";
+      updateSimChart([]);
       return;
     }
 
@@ -370,8 +402,14 @@ window.addEventListener("DOMContentLoaded", () => {
       </table>
     `;
 
+    updateSimChart(topCases);
+
     div.querySelectorAll("button[data-diag]").forEach(btn => {
-      btn.addEventListener("click", () => highlightDiagnosisPathAndFeatures(btn.getAttribute("data-diag")));
+      btn.addEventListener("click", () => {
+        const dxId = btn.getAttribute("data-diag");
+        highlightDiagnosisPathAndFeatures(dxId);
+        if ($("kpiDx")) $("kpiDx").textContent = nodeLabel(dxId);
+      });
     });
   }
 
@@ -397,10 +435,14 @@ window.addEventListener("DOMContentLoaded", () => {
       const chosen = DEMO_NOTES.find(x => x.id === sel.value);
       if (!chosen) return;
 
-      $("note").value = chosen.note;
+      if ($("note")) $("note").value = chosen.note;
+
       resetHighlights();
       if ($("results")) $("results").innerHTML = "";
+      updateSimChart([]);
       if ($("feedbackBox")) $("feedbackBox").innerHTML = "";
+      if ($("kpiTopSim")) $("kpiTopSim").textContent = "—";
+      if ($("kpiDx")) $("kpiDx").textContent = "—";
     });
   }
 
@@ -413,9 +455,9 @@ window.addEventListener("DOMContentLoaded", () => {
   // Optional manual mapping demo note -> gold dx
   // Adjust these IDs to match YOUR diagnoses in data.js
   const DEMO_GOLD_MAP = {
-    demo_001: "icop_3_2_2",      // Dru: disc displacement group (example)
-    demo_002: "icop_2_1_2",      // Splint follow-up: chronic primary myofascial (example)
-    demo_003: "icop_3_2_2_1_1"   // Toni: disc displacement with intermittent locking (example)
+    demo_001: "icop_3_2_2",
+    demo_002: "icop_2_1_2",
+    demo_003: "icop_3_2_2_1_1"
   };
 
   function computeGoldDx() {
@@ -507,9 +549,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const confusable = findConfusableAlternative(selected, goldDx);
 
-    // Feedback text
     const fb = `
-      <div style="padding:10px;border:1px solid #eee;border-radius:10px;">
+      <div style="padding:10px;border:1px solid #eee;border-radius:10px;background:#fff;">
         <div><strong>Result:</strong> ${correct ? "✅ Correct diagnosis" : "❌ Incorrect diagnosis"}</div>
         <div style="margin-top:6px;"><strong>Gold diagnosis:</strong> ${escapeHtml(nodeLabel(goldDx))}</div>
         <div><strong>Your diagnosis:</strong> ${escapeHtml(nodeLabel(studentDx))}</div>
@@ -529,8 +570,9 @@ window.addEventListener("DOMContentLoaded", () => {
     `;
     showFeedback(fb);
 
-    // Highlight the gold dx in the graph
+    // Highlight the gold dx in the graph + update KPI dx
     highlightDiagnosisPathAndFeatures(goldDx);
+    if ($("kpiDx")) $("kpiDx").textContent = nodeLabel(goldDx);
 
     // Log
     logAttempt({
@@ -553,8 +595,11 @@ window.addEventListener("DOMContentLoaded", () => {
   $("resetBtn")?.addEventListener("click", () => {
     resetHighlights();
     if ($("results")) $("results").innerHTML = "";
+    updateSimChart([]);
     if ($("feedbackBox")) $("feedbackBox").innerHTML = "";
     lastTop1Dx = null;
+    if ($("kpiTopSim")) $("kpiTopSim").textContent = "—";
+    if ($("kpiDx")) $("kpiDx").textContent = "—";
   });
 
   $("runBtn")?.addEventListener("click", () => {
@@ -580,6 +625,10 @@ window.addEventListener("DOMContentLoaded", () => {
     if (top.length > 0) {
       lastTop1Dx = top[0].diagnosisNodeId;
       highlightDiagnosisPathAndFeatures(lastTop1Dx);
+      if ($("kpiDx")) $("kpiDx").textContent = nodeLabel(lastTop1Dx);
+    } else {
+      lastTop1Dx = null;
+      if ($("kpiDx")) $("kpiDx").textContent = "—";
     }
   });
 
