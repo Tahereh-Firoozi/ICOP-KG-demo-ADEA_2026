@@ -1,53 +1,19 @@
 // app.js
-// ---------- Graph setup (Cytoscape) ----------
-
-// Safety check: make errors obvious in console
+// ---------- Safety checks ----------
 if (typeof cytoscape === "undefined") {
   throw new Error("Cytoscape is not loaded. Check the script tag in index.html.");
 }
 if (typeof KG_NODES === "undefined" || typeof KG_EDGES === "undefined") {
-  throw new Error("KG_NODES / KG_EDGES not found. Check that data.js is loaded BEFORE app.js.");
+  throw new Error("KG_NODES / KG_EDGES not found. Check that data.js loads BEFORE app.js.");
 }
-// ---------- Case selector (student demo) ----------
-function populateCaseSelector() {
-  const sel = document.getElementById("caseSelect");
-  const loadBtn = document.getElementById("loadCaseBtn");
-  if (!sel || !loadBtn) return;
-
-  if (typeof DEMO_NOTES === "undefined") {
-    console.warn("DEMO_NOTES not found. Did you add it to data.js?");
-    return;
-  }
-
-  // Fill dropdown
-  for (const item of DEMO_NOTES) {
-    const opt = document.createElement("option");
-    opt.value = item.id;
-    opt.textContent = item.title;
-    sel.appendChild(opt);
-  }
-
-  // Load selected note
-  loadBtn.addEventListener("click", () => {
-    const id = sel.value;
-    const chosen = DEMO_NOTES.find(x => x.id === id);
-    if (!chosen) return;
-
-    document.getElementById("note").value = chosen.note;
-    resetHighlights();
-    document.getElementById("results").innerHTML = "";
-  });
+if (typeof CASE_LIBRARY === "undefined") {
+  throw new Error("CASE_LIBRARY not found. Check data.js.");
 }
 
-// Call once after page load
-populateCaseSelector();
+// ---------- Graph setup (Cytoscape) ----------
 const cy = cytoscape({
   container: document.getElementById("cy"),
-
-  elements: [
-    ...KG_NODES,
-    ...KG_EDGES
-  ],
+  elements: [...KG_NODES, ...KG_EDGES],
 
   style: [
     {
@@ -102,7 +68,6 @@ const cy = cytoscape({
         "color": "#777"
       }
     },
-
     // Highlight styles
     {
       selector: ".hlNode",
@@ -122,9 +87,7 @@ const cy = cytoscape({
     },
     {
       selector: ".dim",
-      style: {
-        "opacity": 0.20
-      }
+      style: { "opacity": 0.20 }
     }
   ],
 
@@ -133,22 +96,49 @@ const cy = cytoscape({
     directed: true,
     padding: 60,
     spacingFactor: 1.6,
-    // NOTE: some Cytoscape layouts ignore levelSeparation/nodeSpacing;
-    // they won't crash, but may have no effect.
     animate: false
   }
 });
 
+// ---------- Highlight helpers ----------
 function resetHighlights() {
   cy.elements().removeClass("hlNode hlEdge dim");
 }
 
-document.getElementById("resetBtn").addEventListener("click", () => {
+function highlightDiagnosisPathAndSymptoms(diagnosisNodeId) {
   resetHighlights();
-  document.getElementById("results").innerHTML = "";
-});
+  cy.elements().addClass("dim");
 
-// ---------- Simple TF-IDF + cosine similarity (browser-only) ----------
+  const diag = cy.getElementById(diagnosisNodeId);
+  if (!diag || diag.empty()) return;
+
+  diag.removeClass("dim").addClass("hlNode");
+
+  // Parent chain: incoming parent_of edges (source=parent -> target=child)
+  let current = diag;
+  while (true) {
+    const incomingParentEdges = current.incomers('edge[rel="parent_of"]');
+    if (incomingParentEdges.length === 0) break;
+
+    const e = incomingParentEdges[0]; // demo assumes single parent
+    const parentNode = e.source();
+
+    e.removeClass("dim").addClass("hlEdge");
+    parentNode.removeClass("dim").addClass("hlNode");
+
+    current = parentNode;
+  }
+
+  // Symptom edges (outgoing has_symptom)
+  const symptomEdges = diag.outgoers('edge[rel="has_symptom"]');
+  symptomEdges.removeClass("dim").addClass("hlEdge");
+  symptomEdges.targets().removeClass("dim").addClass("hlNode");
+
+  const highlighted = cy.elements(".hlNode, .hlEdge");
+  if (highlighted.length > 0) cy.fit(highlighted, 70);
+}
+
+// ---------- TF-IDF + cosine similarity ----------
 function tokenize(text) {
   return text
     .toLowerCase()
@@ -195,8 +185,7 @@ function vectorize(tokens, vocab, idf) {
   for (const [t, tfv] of tf.entries()) {
     const idx = vocab.get(t);
     if (idx === undefined) continue;
-    const idfv = idf.get(t) || 0;
-    vec[idx] = tfv * idfv;
+    vec[idx] = tfv * (idf.get(t) || 0);
   }
   return vec;
 }
@@ -213,44 +202,15 @@ function cosine(a, b) {
 }
 
 function toPercent(x) {
-  return Math.round(x * 1000) / 10; // 1 decimal
+  return Math.round(x * 1000) / 10;
 }
 
-// ---------- KG highlight logic ----------
-function highlightDiagnosisPathAndSymptoms(diagnosisNodeId) {
+// ---------- UI: buttons ----------
+document.getElementById("resetBtn").addEventListener("click", () => {
   resetHighlights();
-  cy.elements().addClass("dim");
+  document.getElementById("results").innerHTML = "";
+});
 
-  const diag = cy.getElementById(diagnosisNodeId);
-  if (!diag || diag.empty()) return;
-
-  diag.removeClass("dim").addClass("hlNode");
-
-  // Parent chain: follow incoming parent_of edges
-  let current = diag;
-  while (true) {
-    const incomingParentEdges = current.incomers('edge[rel="parent_of"]');
-    if (incomingParentEdges.length === 0) break;
-
-    const e = incomingParentEdges[0];
-    const parentNode = e.source();
-
-    e.removeClass("dim").addClass("hlEdge");
-    parentNode.removeClass("dim").addClass("hlNode");
-
-    current = parentNode;
-  }
-
-  // Symptom edges (outgoing has_symptom)
-  const symptomEdges = diag.outgoers('edge[rel="has_symptom"]');
-  symptomEdges.removeClass("dim").addClass("hlEdge");
-  symptomEdges.targets().removeClass("dim").addClass("hlNode");
-
-  const highlighted = cy.elements(".hlNode, .hlEdge");
-  if (highlighted.length > 0) cy.fit(highlighted, 70);
-}
-
-// ---------- Run demo ----------
 document.getElementById("runBtn").addEventListener("click", () => {
   const note = document.getElementById("note").value.trim();
 
@@ -264,10 +224,9 @@ document.getElementById("runBtn").addEventListener("click", () => {
   const caseVecs = CASE_LIBRARY.map((c, i) => vectorize(caseTokens[i], vocab, idf));
   const queryVec = vectorize(queryTokens, vocab, idf);
 
-  const scored = CASE_LIBRARY.map((c, i) => {
-    const sim = cosine(queryVec, caseVecs[i]);
-    return { ...c, sim };
-  }).sort((a, b) => b.sim - a.sim);
+  const scored = CASE_LIBRARY
+    .map((c, i) => ({ ...c, sim: cosine(queryVec, caseVecs[i]) }))
+    .sort((a, b) => b.sim - a.sim);
 
   const top = scored.slice(0, 3);
   renderResults(top);
@@ -277,6 +236,7 @@ document.getElementById("runBtn").addEventListener("click", () => {
   }
 });
 
+// ---------- Results renderer ----------
 function renderResults(topCases) {
   const div = document.getElementById("results");
   if (!topCases || topCases.length === 0) {
@@ -295,9 +255,7 @@ function renderResults(topCases) {
         </div>
       </td>
       <td style="white-space:nowrap; font-weight:700;">${toPercent(c.sim)}%</td>
-      <td>
-        <button data-diag="${c.diagnosisNodeId}">Highlight</button>
-      </td>
+      <td><button data-diag="${c.diagnosisNodeId}">Highlight</button></td>
     </tr>
   `).join("");
 
@@ -317,8 +275,7 @@ function renderResults(topCases) {
 
   div.querySelectorAll("button[data-diag]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const diag = btn.getAttribute("data-diag");
-      highlightDiagnosisPathAndSymptoms(diag);
+      highlightDiagnosisPathAndSymptoms(btn.getAttribute("data-diag"));
     });
   });
 }
@@ -332,3 +289,37 @@ function escapeHtml(str) {
     "'": "&#039;"
   }[m]));
 }
+
+// ---------- Case selector (student demo) ----------
+function populateCaseSelector() {
+  const sel = document.getElementById("caseSelect");
+  if (!sel) return;
+
+  if (typeof DEMO_NOTES === "undefined") {
+    console.warn("DEMO_NOTES not found. Ensure data.js loads before app.js.");
+    return;
+  }
+
+  // Reset options each time (avoids duplicates)
+  sel.innerHTML = `<option value="">Choose a case…</option>`;
+
+  for (const item of DEMO_NOTES) {
+    const opt = document.createElement("option");
+    opt.value = item.id;
+    opt.textContent = item.title;
+    sel.appendChild(opt);
+  }
+
+  // Auto-load note on selection change
+  sel.addEventListener("change", () => {
+    const chosen = DEMO_NOTES.find(x => x.id === sel.value);
+    if (!chosen) return;
+
+    document.getElementById("note").value = chosen.note;
+    resetHighlights();
+    document.getElementById("results").innerHTML = "";
+  });
+}
+
+// Run after DOM is ready
+window.addEventListener("DOMContentLoaded", populateCaseSelector);
