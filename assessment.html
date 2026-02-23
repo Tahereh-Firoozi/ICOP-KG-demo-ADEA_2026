@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>ICOP Assessment (Clinical Reasoning)</title>
+
+  <!-- Cytoscape (optional graph on the right) -->
+  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f8fafc; }
+    header { padding: 14px 18px; border-bottom: 1px solid #e6e6e6; background: #ffffffcc; backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20; }
+    main { display: grid; grid-template-columns: 520px 1fr; gap: 12px; padding: 12px; }
+    .panel { border: 1px solid #e6e6e6; border-radius: 12px; padding: 12px; background:#fff; }
+    .muted { color: #666; font-size: 13px; line-height: 1.4; }
+    textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; background:#fff; }
+    button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; background: #f7f7f7; }
+    button:hover { background: #f0f0f0; }
+    select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; background:#fff; font-size:14px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .pill { display:inline-block; padding: 2px 10px; border-radius:999px; border:1px solid #ddd; font-size:12px; color:#444; background:#fff; text-decoration:none; }
+    #cy { height: calc(100vh - 170px); min-height: 560px; }
+    .kpiRow { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+    .kpiVal { font-size: 20px; font-weight: 800; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <div>
+        <div style="font-weight:800;">ICOP Assessment (Clinical Reasoning)</div>
+        <div class="muted">Submit diagnosis + key features + justification. Feedback is shown immediately.</div>
+      </div>
+      <a class="pill" href="./index.html">← Back to main</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: Assessment UI -->
+    <section class="panel">
+      <div style="font-weight:800;">Assessment</div>
+
+      <div class="kpiRow">
+        <div class="panel">
+          <div class="muted">Top similarity</div>
+          <div id="kpiTopSim" class="kpiVal">—</div>
+        </div>
+        <div class="panel">
+          <div class="muted">Diagnosis (ICOP mapping)</div>
+          <div id="kpiDx" class="kpiVal" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label class="muted" for="studentId"><strong>Student ID</strong> (optional)</label>
+        <input id="studentId" type="text" placeholder="e.g., CCID or initials" />
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="muted" for="studentDiagnosis"><strong>Student Diagnosis</strong></label>
+        <select id="studentDiagnosis">
+          <option value="">Select diagnosis…</option>
+        </select>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="muted"><strong>Key Features Selected</strong></div>
+        <div id="symptomChecklist"
+             style="margin-top:6px;display:grid;grid-template-columns:1fr;gap:6px;max-height:280px;overflow:auto;padding:8px;border:1px solid #eee;border-radius:10px;background:#fff;">
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="muted" for="justification"><strong>Justification</strong> (1–3 sentences)</label>
+        <textarea id="justification" style="height:110px;" placeholder="Explain why this diagnosis fits, referencing key findings."></textarea>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="submitAssessmentBtn">Submit assessment</button>
+        <button id="exportCsvBtn">Export CSV</button>
+      </div>
+
+      <div id="feedbackBox" class="muted" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- RIGHT: Graph (optional but useful) -->
+    <section class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;">Graph Explorer</h4>
+        <button id="fitBtn">Fit</button>
+      </div>
+      <div id="cy" style="margin-top:8px;"></div>
+    </section>
+  </main>
+
+  <!-- Order matters -->
+  <script src="./data.js?v=assess5"></script>
+  <script src="./app.js?v=assess5"></script>
+</body>
+</html>
