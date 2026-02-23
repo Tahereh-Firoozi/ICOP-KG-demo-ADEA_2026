@@ -204,6 +204,60 @@ function cosine(a, b) {
 function toPercent(x) {
   return Math.round(x * 1000) / 10;
 }
+function jaccardSimilarity(a, b) {
+  const A = new Set(a || []);
+  const B = new Set(b || []);
+  const inter = [...A].filter(x => B.has(x)).length;
+  const union = new Set([...A, ...B]).size;
+  return union === 0 ? 0 : inter / union;
+}
+
+function symptomLabel(symptomId) {
+  if (typeof SYMPTOM_OPTIONS === "undefined") return symptomId;
+  const hit = SYMPTOM_OPTIONS.find(s => s.id === symptomId);
+  return hit ? hit.label : symptomId;
+}
+
+function prettyDx(nodeId) {
+  const map = {
+    icop_l3_myalgia: "ICOP L3: Myalgia",
+    icop_l3_arthralgia: "ICOP L3: Arthralgia",
+    icop_l3_disc: "ICOP L3: Disc displacement (w/ reduction)"
+  };
+  return map[nodeId] || nodeId || "(none)";
+}
+function getDiagnosisSymptomSet(dxNodeId) {
+  // Uses KG edges rel="has_symptom" to get expected features for a dx node
+  const dx = cy.getElementById(dxNodeId);
+  if (!dx || dx.empty()) return [];
+  const edges = dx.outgoers('edge[rel="has_symptom"]');
+  const targets = edges.targets();
+  return targets.map(n => n.id());
+}
+
+function suggestConfusableAlternative(selectedSymptoms, goldDx, studentDx) {
+  const candidates = ["icop_l3_myalgia", "icop_l3_arthralgia", "icop_l3_disc"]
+    .filter(x => x !== goldDx); // exclude gold
+
+  // If student chose wrong, the "confusable alternative" can be their chosen dx
+  // otherwise compute "runner up" relative to gold.
+  let best = null;
+
+  for (const dx of candidates) {
+    const expected = getDiagnosisSymptomSet(dx);
+    const score = jaccardSimilarity(selectedSymptoms, expected);
+
+    if (!best || score > best.score) best = { dx, score, expected };
+  }
+
+  // fallback: use a predefined mapping if scores tie or graph lacks edges
+  if (!best || best.score === 0) {
+    const fallback = (typeof CONFUSABLE_MAP !== "undefined" && CONFUSABLE_MAP[goldDx]) ? CONFUSABLE_MAP[goldDx] : null;
+    return fallback ? { dx: fallback, score: 0, expected: getDiagnosisSymptomSet(fallback) } : null;
+  }
+
+  return best;
+}
 
 // ---------- UI: buttons ----------
 document.getElementById("resetBtn").addEventListener("click", () => {
