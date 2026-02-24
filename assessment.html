@@ -8,120 +8,314 @@
   <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f8fafc; }
-    header { padding: 14px 18px; border-bottom: 1px solid #e6e6e6; background: #ffffffcc; backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20; }
-    main { display: grid; grid-template-columns: 560px 1fr; gap: 12px; padding: 12px; }
-    .panel { border: 1px solid #e6e6e6; border-radius: 12px; padding: 12px; background:#fff; }
-    .muted { color: #666; font-size: 13px; line-height: 1.4; }
-    textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; background:#fff; }
-    button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; background: #f7f7f7; }
-    button:hover { background: #f0f0f0; }
-    select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; background:#fff; font-size:14px; }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .pill { display:inline-block; padding: 2px 10px; border-radius:999px; border:1px solid #ddd; font-size:12px; color:#444; background:#fff; text-decoration:none; }
-    #cy { height: calc(100vh - 170px); min-height: 560px; }
-    .kpiRow { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
-    .kpiVal { font-size: 20px; font-weight: 800; }
-    .sectionTitle { font-weight: 800; margin-top: 10px; }
-    .card { padding:10px; border:1px solid #eee; border-radius:10px; background:#fff; }
-    .tag { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size:12px; margin-right:6px; margin-top:6px; }
+    :root{
+      /* University of Alberta theme (web-friendly approximation) */
+      --ua: #007C41;
+      --ua-dark: #005c31;
+      --ua-tint: #EAF6EF;
+      --ink: #0f172a;
+      --muted: #475569;
+      --card: rgba(255,255,255,0.92);
+      --stroke: rgba(15,23,42,0.10);
+      --shadow: 0 10px 26px rgba(2,6,23,0.10);
+      --shadow2: 0 6px 18px rgba(2,6,23,0.08);
+      --radius: 16px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(0,124,65,0.16), transparent 50%),
+        radial-gradient(900px 500px at 100% 10%, rgba(0,124,65,0.10), transparent 55%),
+        linear-gradient(180deg, var(--ua-tint), #f8fafc 40%, #f8fafc 100%);
+    }
+
+    header{
+      position: sticky; top:0; z-index: 20;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(10px);
+    }
+
+    .brandRow{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+    }
+
+    .title{
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .subtitle{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .pillLink{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      text-decoration:none;
+      font-weight: 700;
+      box-shadow: var(--shadow2);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .pillLink:hover{ transform: translateY(-1px); box-shadow: var(--shadow); }
+
+    main{
+      display:grid;
+      grid-template-columns: 580px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel{
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow2);
+    }
+
+    .panelInner{ padding: 14px; }
+
+    .sectionTitle{
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      font-size: 15px;
+      margin: 0 0 8px 0;
+      display:flex; align-items:center; gap:10px;
+    }
+
+    .badge{
+      display:inline-flex; align-items:center;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--ua), var(--ua-dark));
+      box-shadow: 0 6px 16px rgba(0,124,65,0.22);
+    }
+
+    label{ display:block; font-size: 12px; font-weight: 800; color: var(--muted); }
+    select, input, textarea{
+      width:100%;
+      margin-top: 6px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,0.12);
+      background: rgba(255,255,255,0.96);
+      font-size: 14px;
+      outline: none;
+      transition: box-shadow .12s ease, border-color .12s ease, transform .12s ease;
+    }
+    select:focus, input:focus, textarea:focus{
+      border-color: rgba(0,124,65,0.50);
+      box-shadow: 0 0 0 4px rgba(0,124,65,0.14);
+    }
+
+    textarea{ resize: vertical; min-height: 120px; }
+
+    .kpiRow{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .kpiCard{
+      border-radius: 14px;
+      border: 1px solid rgba(0,124,65,0.18);
+      background:
+        linear-gradient(180deg, rgba(0,124,65,0.10), rgba(255,255,255,0.85));
+      padding: 12px;
+    }
+    .kpiLabel{ color: var(--muted); font-size: 12px; font-weight: 800; }
+    .kpiVal{ font-weight: 950; font-size: 22px; letter-spacing: -0.02em; margin-top: 6px; }
+
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+
+    .btn{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,0.14);
+      cursor:pointer;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      background: rgba(255,255,255,0.95);
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow2); }
+    .btnPrimary{
+      color:#fff;
+      border-color: rgba(0,124,65,0.35);
+      background: linear-gradient(135deg, var(--ua), var(--ua-dark));
+      box-shadow: 0 10px 22px rgba(0,124,65,0.20);
+    }
+    .btnPrimary:hover{ filter: brightness(1.02); }
+
+    .card{
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,0.94);
+      padding: 12px;
+    }
+
+    /* Checklist nicer */
+    #symptomChecklist{
+      margin-top: 6px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      max-height: 260px;
+      overflow:auto;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,0.92);
+    }
+    #symptomChecklist label{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,0.06);
+      background: rgba(248,250,252,0.70);
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    #symptomChecklist label:hover{ transform: translateY(-1px); box-shadow: 0 8px 18px rgba(2,6,23,0.06); }
+
+    /* Graph panel */
+    .graphHeader{
+      display:flex; justify-content:space-between; align-items:center;
+      padding: 14px 14px 0 14px;
+    }
+    .graphTitle{
+      font-weight: 950;
+      letter-spacing: -0.02em;
+      font-size: 16px;
+      margin:0;
+      display:flex; align-items:center; gap:10px;
+    }
+    #cy{
+      height: calc(100vh - 190px);
+      min-height: 620px;
+      border-radius: var(--radius);
+      margin: 12px;
+      border: 1px solid rgba(15,23,42,0.10);
+      background:
+        radial-gradient(1200px 520px at 40% 20%, rgba(0,124,65,0.06), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.90));
+    }
+
+    /* Small screens */
+    @media (max-width: 1100px){
+      main{ grid-template-columns: 1fr; }
+      #cy{ height: 520px; min-height: 520px; }
+    }
   </style>
 </head>
 
 <body>
   <header>
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+    <div class="brandRow">
       <div>
-        <div style="font-weight:800;">ICOP Assessment (Clinical Reasoning)</div>
-        <div class="muted">Select a scenario, submit diagnosis + key features + justification, then receive rubric-based “AI feedback”.</div>
+        <div class="title">ICOP Assessment <span style="color:var(--ua);">(Clinical Reasoning)</span></div>
+        <div class="subtitle">Select a scenario, submit diagnosis + key features + justification, then receive rubric-based “AI feedback”.</div>
       </div>
-      <a class="pill" href="./index.html">← Back to main</a>
+      <a class="pillLink" href="./index.html">← Back to main</a>
     </div>
   </header>
 
   <main>
     <!-- LEFT -->
     <section class="panel">
-      <div style="font-weight:800;">Scenario</div>
-      <div class="muted">Pick a case (or edit the note) to anchor your clinical reasoning.</div>
+      <div class="panelInner">
+        <div class="sectionTitle"><span class="badge">Scenario</span> Choose or edit a case note</div>
 
-      <div style="margin-top:10px;">
-        <label class="muted"><strong>Scenario case</strong></label>
-        <select id="caseSelectAssess" style="margin-top:6px;">
-          <option value="">Choose a case…</option>
-        </select>
-      </div>
-
-      <div style="margin-top:10px;">
-        <label class="muted"><strong>Scenario note</strong></label>
-        <textarea id="noteAssess" style="height:150px;margin-top:6px;"
-          placeholder="Paste or type the scenario note here..."></textarea>
-      </div>
-
-      <div class="kpiRow">
-        <div class="panel">
-          <div class="muted">Top similarity</div>
-          <div id="kpiTopSim" class="kpiVal">—</div>
+        <div style="margin-top:10px;">
+          <label><strong>Scenario case</strong></label>
+          <select id="caseSelectAssess">
+            <option value="">Choose a case…</option>
+          </select>
         </div>
-        <div class="panel">
-          <div class="muted">Diagnosis (ICOP mapping)</div>
-          <div id="kpiDx" class="kpiVal" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
+
+        <div style="margin-top:10px;">
+          <label><strong>Scenario note</strong></label>
+          <textarea id="noteAssess" placeholder="Paste or type the scenario note here..."></textarea>
         </div>
-      </div>
 
-      <div class="sectionTitle">Student response</div>
-
-      <div style="margin-top:8px;">
-        <label class="muted" for="studentId"><strong>Student ID</strong> (optional)</label>
-        <input id="studentId" type="text" placeholder="e.g., CCID or initials" />
-      </div>
-
-      <div style="margin-top:10px;">
-        <label class="muted" for="studentDiagnosis"><strong>Student Diagnosis</strong></label>
-        <select id="studentDiagnosis" style="margin-top:6px;">
-          <option value="">Select diagnosis…</option>
-        </select>
-      </div>
-
-      <div style="margin-top:10px;">
-        <div class="muted"><strong>Key Features Selected</strong></div>
-        <div id="symptomChecklist"
-             style="margin-top:6px;display:grid;grid-template-columns:1fr;gap:6px;max-height:260px;overflow:auto;padding:8px;border:1px solid #eee;border-radius:10px;background:#fff;">
+        <div class="kpiRow">
+          <div class="kpiCard">
+            <div class="kpiLabel">Top similarity</div>
+            <div id="kpiTopSim" class="kpiVal">—</div>
+          </div>
+          <div class="kpiCard">
+            <div class="kpiLabel">Diagnosis (ICOP mapping)</div>
+            <div id="kpiDx" class="kpiVal" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+          </div>
         </div>
-      </div>
 
-      <div style="margin-top:10px;">
-        <label class="muted" for="justification"><strong>Justification</strong> (1–3 sentences)</label>
-        <textarea id="justification" style="height:110px;margin-top:6px;"
-          placeholder="Explain why this diagnosis fits, referencing key findings."></textarea>
-      </div>
+        <div class="sectionTitle" style="margin-top:14px;"><span class="badge">Student response</span> Enter your reasoning</div>
 
-      <div class="row" style="margin-top:10px;">
-        <button id="submitAssessmentBtn">Submit + get AI feedback</button>
-        <button id="exportCsvBtn">Export CSV</button>
-      </div>
+        <div style="margin-top:10px;">
+          <label for="studentId"><strong>Student ID</strong> (optional)</label>
+          <input id="studentId" type="text" placeholder="e.g., CCID or initials" />
+        </div>
 
-      <!-- NEW: AI feedback panel -->
-      <div class="sectionTitle">AI feedback (rubric-based)</div>
-      <div id="aiFeedbackBox" class="card muted" style="margin-top:8px;">
-        Submit to see feedback.
-      </div>
+        <div style="margin-top:10px;">
+          <label for="studentDiagnosis"><strong>Student Diagnosis</strong></label>
+          <select id="studentDiagnosis">
+            <option value="">Select diagnosis…</option>
+          </select>
+        </div>
 
-      <!-- Keep original feedbackBox too (if your old code uses it) -->
-      <div id="feedbackBox" class="muted" style="margin-top:10px;"></div>
+        <div style="margin-top:10px;">
+          <label><strong>Key Features Selected</strong></label>
+          <div id="symptomChecklist"></div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label for="justification"><strong>Justification</strong> (1–3 sentences)</label>
+          <textarea id="justification" style="min-height:110px;" placeholder="Explain why this diagnosis fits, referencing key findings."></textarea>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button id="submitAssessmentBtn" class="btn btnPrimary">Submit + get AI feedback</button>
+          <button id="exportCsvBtn" class="btn">Export CSV</button>
+        </div>
+
+        <div class="sectionTitle" style="margin-top:14px;"><span class="badge">AI feedback</span> Rubric-based coaching</div>
+        <div id="aiFeedbackBox" class="card" style="color:var(--muted);">
+          Submit to see feedback.
+        </div>
+
+        <div id="feedbackBox" class="muted" style="margin-top:10px;"></div>
+      </div>
     </section>
 
     <!-- RIGHT -->
     <section class="panel">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h4 style="margin:0;">Graph Explorer</h4>
-        <button id="fitBtn">Fit</button>
+      <div class="graphHeader">
+        <h4 class="graphTitle"><span class="badge">Graph</span> Explorer</h4>
+        <button id="fitBtn" class="btn">Fit</button>
       </div>
-      <div id="cy" style="margin-top:8px;"></div>
+      <div id="cy"></div>
     </section>
   </main>
 
-  <script src="./data.js?v=assess6"></script>
-  <script src="./app.js?v=assess6"></script>
+  <script src="./data.js?v=assess8"></script>
+  <script src="./app.js?v=assess8"></script>
 </body>
 </html>
