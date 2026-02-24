@@ -1,17 +1,9 @@
-// app.js
-// Works with BOTH pages:
-//  - index.html (main graph + similarity demo)
-//  - assessment.html (assessment form + optional graph)
-//
-// Safe if some elements are missing (it checks existence before using).
-//
-// Requires data.js globals:
-// KG_NODES, KG_EDGES, CASE_LIBRARY
+// app.js (multi-page safe)
+// Requires: KG_NODES, KG_EDGES, CASE_LIBRARY
 // Optional: DEMO_NOTES, CONFUSABLE_MAP
 
-// ---------- Safety checks ----------
 if (typeof cytoscape === "undefined") {
-  throw new Error("Cytoscape is not loaded. Check the Cytoscape script tag in your HTML.");
+  throw new Error("Cytoscape is not loaded.");
 }
 if (typeof KG_NODES === "undefined" || typeof KG_EDGES === "undefined") {
   throw new Error("KG_NODES / KG_EDGES not found. Ensure data.js loads BEFORE app.js.");
@@ -30,10 +22,7 @@ window.addEventListener("DOMContentLoaded", () => {
         container: cyContainer,
         elements: [...KG_NODES, ...KG_EDGES],
         style: [
-          // Base
-          {
-            selector: "node",
-            style: {
+          { selector: "node", style: {
               label: "data(label)",
               "text-wrap": "wrap",
               "text-max-width": 260,
@@ -48,29 +37,15 @@ window.addEventListener("DOMContentLoaded", () => {
               width: 180,
               height: 120,
               padding: 14
-            }
-          },
-
-          // ICOP nodes
-          {
-            selector: 'node[type="icop"]',
-            style: {
-              shape: "round-rectangle",
-              "border-width": 4
-            }
-          },
-
-          // Level-based colors
+          }},
+          { selector: 'node[type="icop"]', style: { shape: "round-rectangle", "border-width": 4 } },
           { selector: 'node[type="icop"][level = 1]', style: { "background-color": "#e0f2fe", "border-color": "#0284c7", "font-size": 22, width: 260, height: 150 } },
           { selector: 'node[type="icop"][level = 2]', style: { "background-color": "#dcfce7", "border-color": "#16a34a", "font-size": 20, width: 240, height: 140 } },
           { selector: 'node[type="icop"][level = 3]', style: { "background-color": "#fef9c3", "border-color": "#ca8a04", "font-size": 18, width: 225, height: 135 } },
           { selector: 'node[type="icop"][level = 4]', style: { "background-color": "#fae8ff", "border-color": "#a855f7", "font-size": 17, width: 215, height: 132 } },
           { selector: 'node[type="icop"][level >= 5]', style: { "background-color": "#ffe4e6", "border-color": "#e11d48", "font-size": 16, width: 210, height: 128 } },
 
-          // Symptoms
-          {
-            selector: 'node[type="symptom"]',
-            style: {
+          { selector: 'node[type="symptom"]', style: {
               shape: "ellipse",
               "background-color": "#fff7ed",
               "border-color": "#fb923c",
@@ -79,13 +54,9 @@ window.addEventListener("DOMContentLoaded", () => {
               height: 155,
               "font-size": 15,
               "font-weight": 700
-            }
-          },
+          }},
 
-          // Edges
-          {
-            selector: "edge",
-            style: {
+          { selector: "edge", style: {
               "curve-style": "bezier",
               width: 3,
               "line-color": "#cbd5e1",
@@ -96,35 +67,23 @@ window.addEventListener("DOMContentLoaded", () => {
               "text-rotation": "autorotate",
               "text-margin-y": -10,
               color: "#64748b"
-            }
-          },
+          }},
           { selector: 'edge[rel="parent_of"]', style: { width: 5, "line-color": "#94a3b8", "target-arrow-color": "#94a3b8" } },
           { selector: 'edge[rel="has_symptom"]', style: { "line-style": "dashed", "line-dash-pattern": [6, 6] } },
           { selector: 'edge[rel="risk_factor"]', style: { "line-style": "dotted" } },
 
-          // Highlighting
           { selector: ".hlNode", style: { "border-width": 7, "border-color": "#000", "background-color": "#86efac" } },
           { selector: ".hlEdge", style: { "line-color": "#000", "target-arrow-color": "#000", width: 7 } },
           { selector: ".dim", style: { opacity: 0.15 } }
         ],
-        layout: {
-          name: "breadthfirst",
-          directed: true,
-          padding: 90,
-          spacingFactor: 2.3,
-          animate: false
-        }
+        layout: { name: "breadthfirst", directed: true, padding: 90, spacingFactor: 2.3, animate: false }
       })
     : null;
 
-  // ---------- Helpers (safe even if cy is null) ----------
+  // ---------- Helpers ----------
   function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, (m) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
     }[m]));
   }
 
@@ -149,7 +108,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
     dx.removeClass("dim").addClass("hlNode");
 
-    // parent chain
     let current = dx;
     while (true) {
       const incoming = current.incomers('edge[rel="parent_of"]');
@@ -161,7 +119,6 @@ window.addEventListener("DOMContentLoaded", () => {
       current = parent;
     }
 
-    // features (symptoms + risk)
     const feats = dx.outgoers('edge[rel="has_symptom"], edge[rel="risk_factor"]');
     feats.removeClass("dim").addClass("hlEdge");
     feats.targets().removeClass("dim").addClass("hlNode");
@@ -183,23 +140,20 @@ window.addEventListener("DOMContentLoaded", () => {
   setKpi("kpiTopSim", "—");
   setKpi("kpiDx", "—");
 
-  // ---------- Fit button ----------
   $("fitBtn")?.addEventListener("click", () => {
     if (!cy) return;
     cy.fit(cy.elements(), 80);
   });
 
-  // ---------- Diagnosis + symptom lists (assessment) ----------
+  // ---------- Dx + feature lists ----------
   function getAssessableDxNodes() {
     if (!cy) return [];
     const icopNodes = cy.nodes('node[type="icop"]');
     const dx = [];
-
     icopNodes.forEach(n => {
       const out = n.outgoers('edge[rel="has_symptom"], edge[rel="risk_factor"]');
       if (out && out.length > 0) dx.push({ id: n.id(), label: n.data("label") });
     });
-
     dx.sort((a, b) => (a.label || "").localeCompare(b.label || ""));
     return dx;
   }
@@ -207,11 +161,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function populateDiagnosisSelect() {
     const sel = $("studentDiagnosis");
     if (!sel || !cy) return;
-
     sel.innerHTML = `<option value="">Select diagnosis…</option>`;
-    const dxList = getAssessableDxNodes();
-
-    for (const d of dxList) {
+    for (const d of getAssessableDxNodes()) {
       const opt = document.createElement("option");
       opt.value = d.id;
       opt.textContent = (d.label || d.id).replace(/\n/g, " ");
@@ -231,17 +182,13 @@ window.addEventListener("DOMContentLoaded", () => {
   function populateSymptomChecklist() {
     const box = $("symptomChecklist");
     if (!box || !cy) return;
-
-    const items = getAllFeatureNodes();
     box.innerHTML = "";
-
-    for (const it of items) {
+    for (const it of getAllFeatureNodes()) {
       const row = document.createElement("label");
       row.style.display = "flex";
       row.style.gap = "10px";
       row.style.alignItems = "center";
       row.style.cursor = "pointer";
-
       row.innerHTML = `
         <input type="checkbox" value="${escapeHtml(it.id)}" />
         <span>${escapeHtml((it.label || it.id)).replace(/\n/g, " ")}</span>
@@ -275,21 +222,18 @@ window.addEventListener("DOMContentLoaded", () => {
   function findConfusableAlternative(selectedSymptoms, goldDx) {
     const dxList = getAssessableDxNodes().map(d => d.id).filter(id => id !== goldDx);
     let best = null;
-
     for (const dx of dxList) {
       const expected = getDiagnosisFeatureSet(dx);
       const score = jaccard(selectedSymptoms, expected);
       if (!best || score > best.score) best = { dx, score };
     }
-
     if ((!best || best.score === 0) && typeof CONFUSABLE_MAP !== "undefined" && CONFUSABLE_MAP[goldDx]) {
       return { dx: CONFUSABLE_MAP[goldDx], score: 0 };
     }
-
     return best;
   }
 
-  // ---------- Similarity retrieval ----------
+  // ---------- Similarity retrieval (for KPI + gold dx proxy) ----------
   function tokenize(text) {
     return String(text || "")
       .toLowerCase()
@@ -348,18 +292,30 @@ window.addEventListener("DOMContentLoaded", () => {
     return dot / (Math.sqrt(na) * Math.sqrt(nb));
   }
 
-  // We still compute and store top similarity KPI, even though results/chart are hidden on index.html
-  function setTopSimilarityKpi(sim) {
-    const val = (sim == null) ? "—" : `${Math.round(sim * 100)}%`;
-    setKpi("kpiTopSim", val);
+  function retrieveTopCases(noteText, k = 3) {
+    const note = String(noteText || "").trim();
+    const caseTokens = CASE_LIBRARY.map(c => tokenize(c.text));
+    const queryTokens = tokenize(note);
+
+    const allDocs = [...caseTokens, queryTokens];
+    const vocab = buildVocab(allDocs);
+    const idf = invDocFreq(allDocs);
+
+    const caseVecs = CASE_LIBRARY.map((c, i) => vectorize(caseTokens[i], vocab, idf));
+    const queryVec = vectorize(queryTokens, vocab, idf);
+
+    const scored = CASE_LIBRARY
+      .map((c, i) => ({ ...c, sim: cosine(queryVec, caseVecs[i]) }))
+      .sort((a, b) => b.sim - a.sim);
+
+    return scored.slice(0, k);
   }
 
-  // ---------- Case selector (main page) ----------
-  function populateCaseSelector() {
-    const sel = $("caseSelect");
-    const noteBox = $("note");
+  // ---------- Scenario selectors ----------
+  function populateCaseSelector(selectId, noteId) {
+    const sel = $(selectId);
+    const noteBox = $(noteId);
     if (!sel || !noteBox) return;
-
     if (typeof DEMO_NOTES === "undefined") return;
 
     sel.innerHTML = `<option value="">Choose a case…</option>`;
@@ -373,38 +329,109 @@ window.addEventListener("DOMContentLoaded", () => {
     sel.addEventListener("change", () => {
       const chosen = DEMO_NOTES.find(x => x.id === sel.value);
       if (!chosen) return;
-
-      noteBox.value = chosen.note;
-      resetHighlights();
-      setTopSimilarityKpi(null);
+      noteBox.value = chosen.note || "";
+      // reset KPIs when switching scenario
+      setKpi("kpiTopSim", "—");
       setKpi("kpiDx", "—");
-      const fb = $("feedbackBox");
-      if (fb) fb.innerHTML = "";
+      resetHighlights();
     });
   }
 
-  // ---------- Assessment (Formative) ----------
-  let lastTop1Dx = null;
+  // ---------- AI feedback (rubric-based) ----------
+  function scoreJustification(justText, expectedFeatureLabels) {
+    const t = String(justText || "").trim();
+    if (!t) return { score: 0, flags: ["No justification provided."], tips: ["Add 1–3 sentences linking findings → diagnosis."] };
 
-  const DEMO_GOLD_MAP = {
-    demo_001: "icop_3_2_2",
-    demo_002: "icop_2_1_2",
-    demo_003: "icop_3_2_2_1_1"
-  };
+    const wordCount = t.split(/\s+/).filter(Boolean).length;
+    const hasCausal = /\b(because|therefore|thus|since|suggests|consistent with|given)\b/i.test(t);
+    const hasContrast = /\b(however|but|although|whereas|rule out|differential)\b/i.test(t);
 
-  function computeGoldDx() {
-    if (lastTop1Dx) return lastTop1Dx;
-    const sel = $("caseSelect");
-    if (sel && sel.value && DEMO_GOLD_MAP[sel.value]) return DEMO_GOLD_MAP[sel.value];
-    return null;
+    // crude “mentions features” by matching a few feature label keywords
+    const lower = t.toLowerCase();
+    let featureMentions = 0;
+    for (const lbl of expectedFeatureLabels.slice(0, 8)) {
+      const key = String(lbl).toLowerCase().split(/[\/(),]/)[0].trim();
+      if (key && key.length >= 4 && lower.includes(key)) featureMentions += 1;
+    }
+
+    let score = 0;
+    if (wordCount >= 10) score += 1;
+    if (wordCount >= 20) score += 1;
+    if (hasCausal) score += 1;
+    if (featureMentions >= 1) score += 1;
+    if (featureMentions >= 2) score += 1;
+    if (hasContrast) score += 1;
+
+    const tips = [];
+    if (!hasCausal) tips.push("Use causal language (e.g., “because / consistent with / suggests”).");
+    if (featureMentions === 0) tips.push("Explicitly reference 1–2 key features from the scenario.");
+    if (!hasContrast) tips.push("Briefly mention a differential or why alternatives are less likely (optional but strong).");
+    if (wordCount < 10) tips.push("Add one more sentence to connect findings → diagnosis.");
+
+    const flags = [];
+    if (wordCount > 80) flags.push("Justification is long. Aim for 1–3 crisp sentences.");
+
+    return { score, flags, tips };
   }
 
-  function showFeedback(html) {
-    const box = $("feedbackBox");
+  function renderAiFeedback({ correctDx, featureCoverage, missingLabels, extraLabels, confusableDxLabel, justificationEval }) {
+    const box = $("aiFeedbackBox");
     if (!box) return;
-    box.innerHTML = html;
+
+    const covPct = Math.round(featureCoverage * 100);
+    const grade =
+      (correctDx && covPct >= 70 && justificationEval.score >= 4) ? "Strong" :
+      (covPct >= 50 && justificationEval.score >= 3) ? "Adequate" :
+      "Needs improvement";
+
+    const tags = [];
+    tags.push(`<span class="tag"><strong>Overall:</strong> ${grade}</span>`);
+    tags.push(`<span class="tag"><strong>Feature coverage:</strong> ${covPct}%</span>`);
+    tags.push(`<span class="tag"><strong>Justification:</strong> ${justificationEval.score}/6</span>`);
+    tags.push(`<span class="tag"><strong>Dx match:</strong> ${correctDx ? "✅" : "❌"}</span>`);
+
+    const list = (arr) => (arr.length ? arr.map(x => `<span class="tag">${escapeHtml(x)}</span>`).join(" ") : `<span class="tag">None</span>`);
+
+    box.innerHTML = `
+      <div style="font-weight:800;margin-bottom:6px;">AI feedback summary</div>
+      <div>${tags.join(" ")}</div>
+
+      <div style="margin-top:10px;">
+        <div style="font-weight:700;">What you did well</div>
+        <div class="muted">
+          ${correctDx ? "Your diagnosis matches the retrieved ICOP mapping." : "You selected a different diagnosis than the retrieved ICOP mapping."}
+          ${covPct >= 60 ? " You captured many expected key features." : " Try to select more of the key features expected for this diagnosis."}
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div style="font-weight:700;">Missing key feature(s)</div>
+        <div>${list(missingLabels)}</div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div style="font-weight:700;">Potentially irrelevant / extra feature(s)</div>
+        <div>${list(extraLabels)}</div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div style="font-weight:700;">Confusable alternative (differential to consider)</div>
+        <div class="muted">${confusableDxLabel ? escapeHtml(confusableDxLabel) : "(none identified)"}</div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div style="font-weight:700;">Justification coaching</div>
+        <div class="muted">
+          ${justificationEval.flags.length ? `<div>${justificationEval.flags.map(escapeHtml).join("<br/>")}</div>` : ""}
+          <ul style="margin:6px 0 0 18px;">
+            ${justificationEval.tips.map(t => `<li>${escapeHtml(t)}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    `;
   }
 
+  // ---------- Attempts log + CSV ----------
   function logAttempt(record) {
     const key = "icop_demo_attempts";
     const prev = JSON.parse(localStorage.getItem(key) || "[]");
@@ -423,14 +450,17 @@ window.addEventListener("DOMContentLoaded", () => {
     const header = [
       "timestamp",
       "student_id",
-      "gold_dx",
+      "scenario_id",
+      "scenario_note",
+      "retrieved_top_dx",
+      "top_similarity",
       "student_dx",
       "correct",
       "selected_features",
       "missing_features",
+      "extra_features",
       "confusable_dx",
-      "justification",
-      "note_text"
+      "justification"
     ];
 
     const escapeCsv = (v) => {
@@ -456,118 +486,116 @@ window.addEventListener("DOMContentLoaded", () => {
     URL.revokeObjectURL(url);
   }
 
-  // Submit assessment (only if button exists on this page)
+  $("exportCsvBtn")?.addEventListener("click", exportAttemptsCsv);
+
+  // ---------- Main page buttons (index.html) ----------
+  $("runBtn")?.addEventListener("click", () => {
+    const note = ($("note")?.value || "").trim();
+    const top = retrieveTopCases(note, 3);
+
+    if (top.length) {
+      setKpi("kpiTopSim", `${Math.round(top[0].sim * 100)}%`);
+      setKpi("kpiDx", nodeLabel(top[0].diagnosisNodeId));
+      highlightDiagnosisPathAndFeatures(top[0].diagnosisNodeId);
+    } else {
+      setKpi("kpiTopSim", "—");
+      setKpi("kpiDx", "—");
+      resetHighlights();
+    }
+  });
+
+  $("resetBtn")?.addEventListener("click", () => {
+    resetHighlights();
+    setKpi("kpiTopSim", "—");
+    setKpi("kpiDx", "—");
+  });
+
+  // ---------- Assessment submit ----------
   $("submitAssessmentBtn")?.addEventListener("click", () => {
-    const goldDx = computeGoldDx();
-    if (!goldDx) {
-      showFeedback(`<div><strong>Gold diagnosis not available.</strong><br/>
-      Run similarity first, or define a gold mapping for the selected case.</div>`);
+    // Read scenario from assessment page if present, else from main
+    const scenarioNote = ($("noteAssess")?.value || $("note")?.value || "").trim();
+    const scenarioId = ($("caseSelectAssess")?.value || $("caseSelect")?.value || "").trim();
+
+    if (!scenarioNote) {
+      const box = $("aiFeedbackBox");
+      if (box) box.textContent = "Please select or paste a scenario note first.";
       return;
     }
 
-    const studentDx = $("studentDiagnosis")?.value || "";
+    const studentDx = ($("studentDiagnosis")?.value || "").trim();
     if (!studentDx) {
-      showFeedback(`<div><strong>Please select a diagnosis.</strong></div>`);
+      const box = $("aiFeedbackBox");
+      if (box) box.textContent = "Please select a student diagnosis.";
       return;
     }
 
     const selected = getSelectedSymptoms();
-    const expected = getDiagnosisFeatureSet(goldDx);
 
+    // Retrieve top cases from scenario note → proxy “gold”
+    const top = retrieveTopCases(scenarioNote, 3);
+    const goldDx = top.length ? top[0].diagnosisNodeId : null;
+    const topSim = top.length ? top[0].sim : null;
+
+    if (!goldDx) {
+      const box = $("aiFeedbackBox");
+      if (box) box.textContent = "Could not retrieve a matching case from the scenario note.";
+      return;
+    }
+
+    setKpi("kpiTopSim", `${Math.round(topSim * 100)}%`);
+    setKpi("kpiDx", nodeLabel(goldDx));
+    highlightDiagnosisPathAndFeatures(goldDx);
+
+    const expected = getDiagnosisFeatureSet(goldDx);
     const missing = expected.filter(x => !selected.includes(x));
-    const correct = (studentDx === goldDx);
+    const extra = selected.filter(x => !expected.includes(x));
+
+    const featureCoverage = expected.length ? (expected.length - missing.length) / expected.length : 0;
+    const correctDx = (studentDx === goldDx);
+
+    const missingLabels = missing.map(nodeLabel);
+    const extraLabels = extra.map(nodeLabel);
 
     const confusable = findConfusableAlternative(selected, goldDx);
+    const confusableDxLabel = confusable?.dx ? nodeLabel(confusable.dx) : "";
 
-    const fb = `
-      <div style="padding:10px;border:1px solid #eee;border-radius:10px;background:#fff;">
-        <div><strong>Result:</strong> ${correct ? "✅ Correct diagnosis" : "❌ Incorrect diagnosis"}</div>
-        <div style="margin-top:6px;"><strong>Gold diagnosis:</strong> ${escapeHtml(nodeLabel(goldDx))}</div>
-        <div><strong>Your diagnosis:</strong> ${escapeHtml(nodeLabel(studentDx))}</div>
+    const expectedLabels = expected.map(nodeLabel);
+    const justification = ($("justification")?.value || "").trim();
+    const justificationEval = scoreJustification(justification, expectedLabels);
 
-        <div style="margin-top:10px;"><strong>Missing key feature(s):</strong>
-          ${missing.length ? missing.map(id => `<span class="pill">${escapeHtml(nodeLabel(id))}</span>`).join(" ") : "<span class='pill'>None</span>"}
-        </div>
-
-        <div style="margin-top:10px;"><strong>Confusable alternative:</strong>
-          ${confusable?.dx ? `<span class="pill">${escapeHtml(nodeLabel(confusable.dx))}</span>` : "<span class='pill'>(none)</span>"}
-        </div>
-
-        <div style="margin-top:10px;" class="muted">
-          Tip: Compare your selected features with the highlighted feature nodes for the gold diagnosis.
-        </div>
-      </div>
-    `;
-    showFeedback(fb);
-
-    // Highlight gold dx (if graph exists on this page)
-    highlightDiagnosisPathAndFeatures(goldDx);
-    setKpi("kpiDx", nodeLabel(goldDx));
+    renderAiFeedback({
+      correctDx,
+      featureCoverage,
+      missingLabels,
+      extraLabels,
+      confusableDxLabel,
+      justificationEval
+    });
 
     logAttempt({
       timestamp: new Date().toISOString(),
       student_id: ($("studentId")?.value || "").trim(),
-      gold_dx: goldDx,
+      scenario_id: scenarioId,
+      scenario_note: scenarioNote,
+      retrieved_top_dx: goldDx,
+      top_similarity: topSim == null ? "" : String(topSim),
       student_dx: studentDx,
-      correct: String(correct),
+      correct: String(correctDx),
       selected_features: selected.join(";"),
       missing_features: missing.join(";"),
+      extra_features: extra.join(";"),
       confusable_dx: confusable?.dx || "",
-      justification: ($("justification")?.value || "").trim(),
-      note_text: ($("note")?.value || "").trim()
+      justification
     });
   });
 
-  $("exportCsvBtn")?.addEventListener("click", exportAttemptsCsv);
-
-  // ---------- Main page buttons (only if they exist) ----------
-  $("resetBtn")?.addEventListener("click", () => {
-    resetHighlights();
-    lastTop1Dx = null;
-    setTopSimilarityKpi(null);
-    setKpi("kpiDx", "—");
-
-    const fb = $("feedbackBox");
-    if (fb) fb.innerHTML = "";
-  });
-
-  $("runBtn")?.addEventListener("click", () => {
-    const note = ($("note")?.value || "").trim();
-
-    const caseTokens = CASE_LIBRARY.map(c => tokenize(c.text));
-    const queryTokens = tokenize(note);
-
-    const allDocs = [...caseTokens, queryTokens];
-    const vocab = buildVocab(allDocs);
-    const idf = invDocFreq(allDocs);
-
-    const caseVecs = CASE_LIBRARY.map((c, i) => vectorize(caseTokens[i], vocab, idf));
-    const queryVec = vectorize(queryTokens, vocab, idf);
-
-    const scored = CASE_LIBRARY
-      .map((c, i) => ({ ...c, sim: cosine(queryVec, caseVecs[i]) }))
-      .sort((a, b) => b.sim - a.sim);
-
-    const top = scored.slice(0, 3);
-
-    // Update KPI top similarity even if we don't show the table/chart
-    setTopSimilarityKpi(top.length ? top[0].sim : null);
-
-    if (top.length > 0) {
-      lastTop1Dx = top[0].diagnosisNodeId;
-      highlightDiagnosisPathAndFeatures(lastTop1Dx);
-      setKpi("kpiDx", nodeLabel(lastTop1Dx));
-    } else {
-      lastTop1Dx = null;
-      setKpi("kpiDx", "—");
-    }
-  });
-
-  // ---------- Initialize ----------
-  populateCaseSelector();
+  // ---------- Initialize UI ----------
   populateDiagnosisSelect();
   populateSymptomChecklist();
 
-  // Fit the whole graph once on load (if present)
+  // Populate scenario selectors on both pages if present
+  populateCaseSelector("caseSelect", "note");
+  populateCaseSelector("caseSelectAssess", "noteAssess");
+
   if (cy) cy.fit(cy.elements(), 80);
 });
