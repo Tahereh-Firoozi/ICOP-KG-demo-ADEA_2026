@@ -721,7 +721,7 @@ window.addEventListener("DOMContentLoaded", () => {
       // Add a note that AI feedback was unavailable
       const noteDiv = document.createElement("div");
       noteDiv.style.cssText = "margin-top:10px;padding:8px 12px;border-radius:10px;background:rgba(255,184,28,0.12);color:#92400e;font-size:13px;font-weight:700;";
-      noteDiv.textContent = "AI feedback unavailable — showing local rubric results.";
+      // noteDiv.textContent = "AI feedback unavailable — showing local rubric results.";
       if (aiBox) aiBox.appendChild(noteDiv);
 
       logAttempt({

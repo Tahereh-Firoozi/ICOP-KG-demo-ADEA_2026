@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pickle
 import re
@@ -30,6 +31,16 @@ DEBUG_DIR.mkdir(exist_ok=True)
 
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 GENERATION_MODEL = "gemini-3-flash-preview"
+
+
+# Basic logging setup – adjust level via LOG_LEVEL env var if needed.
+log_level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_name, logging.INFO)
+logging.basicConfig(
+    level=log_level,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+)
+logger = logging.getLogger("icop_server")
 
 
 def setup_client() -> genai.Client:
@@ -112,10 +123,18 @@ def _maybe_download_embeddings(dest_path: Path) -> Optional[Path]:
     """
     url = os.environ.get("EMBEDDINGS_PKL_URL")
     if not url:
+        logger.info("EMBEDDINGS_PKL_URL not set; skipping embeddings download.")
         return None
 
     bearer = os.environ.get("EMBEDDINGS_PKL_URL_BEARER")
     expected_sha = (os.environ.get("EMBEDDINGS_PKL_SHA256") or "").strip().lower()
+
+    logger.info(
+        "Attempting to download embeddings from EMBEDDINGS_PKL_URL to %s (has bearer: %s, has sha256: %s)",
+        dest_path,
+        bool(bearer),
+        bool(expected_sha),
+    )
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     headers = {}
@@ -126,37 +145,67 @@ def _maybe_download_embeddings(dest_path: Path) -> Optional[Path]:
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             data = r.read()
+        logger.info("Successfully downloaded embeddings (size: %d bytes).", len(data))
     except urllib.error.URLError as e:
+        logger.error("Failed to download embeddings from EMBEDDINGS_PKL_URL: %s", e)
         raise RuntimeError(f"Failed to download embeddings from EMBEDDINGS_PKL_URL: {e}") from e
 
     if expected_sha:
         got = sha256(data).hexdigest().lower()
         if got != expected_sha:
-            raise RuntimeError(f"Embeddings SHA256 mismatch: expected {expected_sha}, got {got}")
+            logger.error(
+                "Embeddings SHA256 mismatch: expected %s, got %s", expected_sha, got
+            )
+            raise RuntimeError(
+                f"Embeddings SHA256 mismatch: expected {expected_sha}, got {got}"
+            )
+        logger.info("Embeddings SHA256 verified successfully.")
 
     dest_path.write_bytes(data)
+    logger.info("Embeddings written to %s", dest_path)
     return dest_path
 
 
 def load_train_embeddings() -> TrainEmbeddings:
     p = os.environ.get("EMBEDDINGS_PKL_PATH")
     embeddings_path = Path(p).expanduser().resolve() if p else EMBEDDINGS_PKL_DEFAULT
+    logger.info(
+        "Initializing train embeddings. EMBEDDINGS_PKL_PATH=%s, resolved path=%s",
+        p,
+        embeddings_path,
+    )
     if not embeddings_path.exists():
+        logger.warning(
+            "Embeddings file not found at %s. Attempting download via EMBEDDINGS_PKL_URL.",
+            embeddings_path,
+        )
         # Try downloading to ephemeral storage if a URL is configured (Render free tier friendly).
         downloaded = _maybe_download_embeddings(Path("/tmp/embeddings.pkl"))
         if downloaded and downloaded.exists():
+            logger.info("Using downloaded embeddings from %s", downloaded)
             embeddings_path = downloaded
         else:
+            logger.error(
+                "Unable to locate or download embeddings. "
+                "Set EMBEDDINGS_PKL_PATH or EMBEDDINGS_PKL_URL."
+            )
             raise RuntimeError(
                 f"Missing embeddings file at {embeddings_path}. "
                 f"Set EMBEDDINGS_PKL_PATH or EMBEDDINGS_PKL_URL."
             )
     with embeddings_path.open("rb") as f:
         docs_all = pickle.load(f)
+    logger.info("Loaded embeddings.pkl with %d documents.", len(docs_all))
     train_docs = [d for d in docs_all if d.get("type") == "train"]
     if not train_docs:
+        logger.error("No train docs found in embeddings.pkl (path=%s).", embeddings_path)
         raise RuntimeError("No train docs found in embeddings.pkl")
     mat = np.array([d["embedding"] for d in train_docs], dtype=np.float64)
+    logger.info(
+        "Train embeddings initialized. n_train=%d, dimension=%d",
+        mat.shape[0],
+        mat.shape[1] if mat.ndim == 2 else -1,
+    )
     return TrainEmbeddings(docs=train_docs, matrix=mat)
 
 
@@ -318,14 +367,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+logger.info("Starting ICOP FastAPI server initialization.")
 _backend_data = load_backend_data()
+logger.info("Loaded backend data with %d nodes and %d edges.", len(_backend_data.node_label), len(_backend_data.edges))
 _train_embeddings: Optional[TrainEmbeddings] = None
 try:
     _train_embeddings = load_train_embeddings()
+    logger.info("Similar-case retrieval enabled (embeddings loaded).")
 except Exception as e:
     # Allow server to start without embeddings (public frontend can still run; AI feedback still works).
     _train_embeddings = None
-    print(f"[WARN] Similar-case retrieval disabled: {e}")
+    logger.warning("Similar-case retrieval disabled: %s", e)
 
 @app.get("/")
 def root() -> RedirectResponse:
