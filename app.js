@@ -1,4 +1,4 @@
-// app.js — UAlberta Green + Gold visualization (Option 3 feedback; GitHub Pages safe)
+// app.js — UAlberta Green + Gold visualization
 // Requires: KG_NODES, KG_EDGES, CASE_LIBRARY
 // Optional: DEMO_NOTES, CONFUSABLE_MAP
 
