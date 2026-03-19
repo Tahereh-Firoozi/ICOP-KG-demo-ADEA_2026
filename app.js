@@ -2,6 +2,12 @@
 // Requires: KG_NODES, KG_EDGES, CASE_LIBRARY
 // Optional: DEMO_NOTES, CONFUSABLE_MAP
 
+// ── Backend URL ──────────────────────────────────────────────────────
+// For local development leave empty ("") so fetches go to the same origin.
+// For production (GitHub Pages → Render) set to your Render service URL,
+// e.g. "https://icop-backend.onrender.com"
+const BACKEND_URL = "";
+
 if (typeof cytoscape === "undefined") throw new Error("Cytoscape is not loaded.");
 if (typeof KG_NODES === "undefined" || typeof KG_EDGES === "undefined") throw new Error("KG_NODES / KG_EDGES not found.");
 if (typeof CASE_LIBRARY === "undefined") throw new Error("CASE_LIBRARY not found.");
@@ -98,6 +104,17 @@ window.addEventListener("DOMContentLoaded", () => {
     return String(str).replace(/[&<>"']/g, (m) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
     }[m]));
+  }
+
+  // Minimal, safe formatting for AI output:
+  // - escape HTML first
+  // - support **bold** and *italic* (in case the model still outputs markdown)
+  // - preserve newlines
+  function renderSafeInlineMarkdown(text) {
+    const escaped = escapeHtml(text || "");
+    const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    const ital = bolded.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    return ital.replace(/\n/g, "<br>");
   }
   function setKpi(id, value) { const el = $(id); if (el) el.textContent = value; }
   function nodeLabel(id) {
@@ -343,88 +360,93 @@ window.addEventListener("DOMContentLoaded", () => {
     return { score, tips };
   }
 
-  function renderAiFeedback(payload) {
+  function renderAssessmentResultsAndFeedback(payload) {
     const box = $("aiFeedbackBox");
     if (!box) return;
 
     const {
       studentDxLabel, goldDxLabel, correctDx,
       selectedFeatureLabels, missingLabels, extraLabels,
-      coveragePct, topSimPct, confusableDxLabel, justificationEval
+      coveragePct, topSimPct, confusableDxLabel, justificationEval,
+      aiFeedbackText, showTemplateText
     } = payload;
-
-    const actions = [];
-    if (!correctDx) actions.push("Re-check your diagnosis selection against the ICOP-matched diagnosis.");
-    if (coveragePct < 70) actions.push("Add missing key features that best discriminate this diagnosis.");
-    if (justificationEval.score < 4) actions.push("Rewrite justification using: (feature → interpretation → diagnosis) and add a contrast/differential phrase.");
-    while (actions.length < 3) actions.push("Keep the justification concise (1–3 sentences) and clinically specific.");
-
-    const modelAnswer =
-      `Given the key findings, this presentation is most consistent with ${goldDxLabel}. ` +
-      `This is supported by the core feature pattern; an alternative such as ${confusableDxLabel || "a nearby ICOP category"} ` +
-      `is less likely given the overall feature profile.`;
 
     const tag = (txt) =>
       `<span style="display:inline-block;padding:2px 8px;border:1px solid rgba(15,23,42,0.12);border-radius:999px;font-size:12px;margin-right:6px;margin-top:6px;background:rgba(255,255,255,0.95);">${escapeHtml(txt)}</span>`;
-    const listTags = (arr) => arr.length ? arr.map(x => tag(x)).join(" ") : tag("None");
+    const listTags = (arr) => (Array.isArray(arr) && arr.length) ? arr.map(x => tag(x)).join(" ") : tag("None");
 
-    box.innerHTML = `
-      <div style="font-weight:950;">AI feedback (rubric-based)</div>
-
+    // Original rubric-style results (like the old UI)
+    const header = `
+      <div style="font-weight:950;">Assessment results</div>
       <div style="margin-top:8px;">
         ${tag(`Top similarity: ${topSimPct}%`)}
         ${tag(`Dx match: ${correctDx ? "✅" : "❌"}`)}
         ${tag(`Feature coverage: ${coveragePct}%`)}
         ${tag(`Justification: ${justificationEval.score}/6`)}
       </div>
+    `;
 
+    const yourAnswer = `
       <div style="margin-top:10px;">
         <div style="font-weight:900;">Your answer</div>
         <div style="color:#475569;"><strong>Diagnosis:</strong> ${escapeHtml(studentDxLabel)}</div>
         <div style="color:#475569;"><strong>Selected features:</strong> ${
           selectedFeatureLabels.length
-            ? escapeHtml(selectedFeatureLabels.slice(0,6).join(", ")) + (selectedFeatureLabels.length>6 ? "…" : "")
+            ? escapeHtml(selectedFeatureLabels.slice(0,6).join(", ")) + (selectedFeatureLabels.length > 6 ? "…" : "")
             : "(none)"
         }</div>
       </div>
+    `;
 
+    const icopMatching = `
       <div style="margin-top:10px;">
         <div style="font-weight:900;">ICOP matching</div>
         <div style="color:#475569;"><strong>Matched diagnosis:</strong> ${escapeHtml(goldDxLabel)}</div>
         <div style="color:#475569;"><strong>Confusable alternative:</strong> ${escapeHtml(confusableDxLabel || "(none identified)")}</div>
       </div>
+    `;
 
+    const missingExtra = `
       <div style="margin-top:10px;">
         <div style="font-weight:900;">Missing key feature(s)</div>
         <div>${listTags(missingLabels)}</div>
       </div>
-
       <div style="margin-top:10px;">
         <div style="font-weight:900;">Extra / less relevant feature(s)</div>
         <div>${listTags(extraLabels)}</div>
       </div>
+    `;
 
-      <div style="margin-top:10px;">
-        <div style="font-weight:900;">Next 3 actions (highest impact)</div>
-        <ol style="margin:6px 0 0 18px;">
-          ${actions.slice(0,3).map(a => `<li>${escapeHtml(a)}</li>`).join("")}
-        </ol>
-      </div>
-
+    const justificationCoaching = `
       <div style="margin-top:10px;">
         <div style="font-weight:900;">Justification coaching</div>
         <ul style="margin:6px 0 0 18px;">
           ${justificationEval.tips.map(t => `<li>${escapeHtml(t)}</li>`).join("")}
         </ul>
       </div>
-
-      <div style="margin-top:10px;">
-        <div style="font-weight:900;">Model answer template</div>
-        <div style="color:#475569;border:1px solid rgba(15,23,42,0.10);border-radius:12px;padding:10px;background:rgba(255,255,255,0.95);">
-          ${escapeHtml(modelAnswer)}
-        </div>
-      </div>
     `;
+
+    const aiSection = aiFeedbackText
+      ? `
+        <div style="margin-top:12px;">
+          <div style="font-weight:950;">AI coaching</div>
+          <div style="margin-top:8px;color:#475569;line-height:1.8;">${renderSafeInlineMarkdown(aiFeedbackText)}</div>
+        </div>
+      `
+      : "";
+
+    const templateSection = (!aiFeedbackText && showTemplateText)
+      ? `
+        <div style="margin-top:12px;">
+          <div style="font-weight:950;">Model answer template</div>
+          <div style="margin-top:8px;color:#475569;border:1px solid rgba(15,23,42,0.10);border-radius:12px;padding:10px;background:rgba(255,255,255,0.95);white-space:pre-wrap;">
+            ${escapeHtml(showTemplateText)}
+          </div>
+        </div>
+      `
+      : "";
+
+    box.innerHTML = header + yourAnswer + icopMatching + missingExtra + justificationCoaching + aiSection + templateSection;
   }
 
   // ---------- Confusable alternative ----------
@@ -494,7 +516,7 @@ window.addEventListener("DOMContentLoaded", () => {
   $("exportCsvBtn")?.addEventListener("click", exportAttemptsCsv);
 
   // ---------- Assessment submit ----------
-  $("submitAssessmentBtn")?.addEventListener("click", () => {
+  $("submitAssessmentBtn")?.addEventListener("click", async () => {
     const scenarioNote = ($("noteAssess")?.value || $("note")?.value || "").trim();
     const scenarioId = ($("caseSelectAssess")?.value || $("caseSelect")?.value || "").trim();
 
@@ -512,60 +534,212 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const selected = getSelectedSymptoms();
 
-    const top = retrieveTopCases(scenarioNote, 3);
-    if (!top.length) {
-      if (aiBox) aiBox.textContent = "Could not retrieve a matching case from the scenario note.";
+    const chosenScenario = (typeof DEMO_NOTES !== "undefined" && scenarioId)
+      ? DEMO_NOTES.find(x => x.id === scenarioId)
+      : null;
+    const goldDx = chosenScenario?.goldDiagnosisNodeId;
+    if (!goldDx) {
+      if (aiBox) aiBox.textContent = "Missing ground truth diagnosis for this scenario. Please select a scenario from the dropdown.";
       return;
     }
 
-    const goldDx = top[0].diagnosisNodeId;
-    const topSim = top[0].sim;
-
-    setKpi("kpiTopSim", `${Math.round(topSim * 100)}%`);
+    setKpi("kpiTopSim", "—");
     setKpi("kpiDx", nodeLabel(goldDx));
     highlightDiagnosisPathAndFeatures(goldDx);
 
-    const expected = getDiagnosisFeatureSet(goldDx);
-    const missing = expected.filter(x => !selected.includes(x));
-    const extra = selected.filter(x => !expected.includes(x));
-    const coverage = expected.length ? (expected.length - missing.length) / expected.length : 0;
-
-    const correctDx = (studentDx === goldDx);
-
-    const confusable = findConfusableAlternative(selected, goldDx);
-
     const justification = ($("justification")?.value || "").trim();
-    const expectedLabels = expected.map(nodeLabel);
-    const justificationEval = scoreJustification(justification, expectedLabels);
 
-    renderAiFeedback({
-      studentDxLabel: nodeLabel(studentDx),
-      goldDxLabel: nodeLabel(goldDx),
-      correctDx,
-      selectedFeatureLabels: selected.map(nodeLabel),
-      missingLabels: missing.map(nodeLabel),
-      extraLabels: extra.map(nodeLabel),
-      coveragePct: Math.round(coverage * 100),
-      topSimPct: Math.round(topSim * 100),
-      confusableDxLabel: confusable?.dx ? nodeLabel(confusable.dx) : "",
-      justificationEval
-    });
+    const similarDetails = $("similarCaseDetails");
+    const similarBox = $("similarCaseBox");
+    if (similarDetails) similarDetails.style.display = "none";
+    if (similarBox) similarBox.textContent = "—";
 
-    logAttempt({
-      timestamp: new Date().toISOString(),
-      student_id: ($("studentId")?.value || "").trim(),
-      scenario_id: scenarioId,
-      scenario_note: scenarioNote,
-      retrieved_top_dx: goldDx,
-      top_similarity: String(topSim),
-      student_dx: studentDx,
-      correct: String(correctDx),
-      selected_features: selected.join(";"),
-      missing_features: missing.join(";"),
-      extra_features: extra.join(";"),
-      confusable_dx: confusable?.dx || "",
-      justification
-    });
+    if (aiBox) aiBox.textContent = "Giving feedback…";
+
+    // Timeout controller — Render free tier can be slow on cold start
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const resp = await fetch(BACKEND_URL + "/api/assess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          scenarioId,
+          scenarioNote,
+          goldDiagnosisNodeId: goldDx,
+          studentDiagnosisNodeId: studentDx,
+          selectedFeatureNodeIds: selected,
+          justification,
+          // Ask for more than 2 so the server can skip cases with repeated "[After x days]" tags
+          // and still return up to 2 acceptable cases.
+          similarK: 8
+        })
+      });
+      clearTimeout(timeoutId);
+      if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+      const api = await resp.json();
+
+      const sim0 = (api?.similarCases && api.similarCases[0]) ? api.similarCases[0] : null;
+      if (sim0) setKpi("kpiTopSim", `${Math.round((sim0.score || 0) * 100)}%`);
+
+      // Compute original rubric results client-side (as before)
+      const expected = getDiagnosisFeatureSet(goldDx);
+      const missing = expected.filter(x => !selected.includes(x));
+      const extra = selected.filter(x => !expected.includes(x));
+      const coverage = expected.length ? (expected.length - missing.length) / expected.length : 0;
+      const correctDx = (studentDx === goldDx);
+      const confusable = findConfusableAlternative(selected, goldDx);
+      const expectedLabels = expected.map(nodeLabel);
+      const justificationEval = scoreJustification(justification, expectedLabels);
+
+      const fb = api?.feedback || {};
+      const aiFeedbackText = (fb && typeof fb.text === "string") ? fb.text.trim() : "";
+      const showTemplateText = (fb?.type === "template_fallback" && aiFeedbackText) ? aiFeedbackText : "";
+
+      renderAssessmentResultsAndFeedback({
+        studentDxLabel: nodeLabel(studentDx),
+        goldDxLabel: nodeLabel(goldDx),
+        correctDx,
+        selectedFeatureLabels: selected.map(nodeLabel),
+        missingLabels: missing.map(nodeLabel),
+        extraLabels: extra.map(nodeLabel),
+        coveragePct: Math.round(coverage * 100),
+        topSimPct: sim0 ? Math.round((sim0.score || 0) * 100) : 0,
+        confusableDxLabel: confusable?.dx ? nodeLabel(confusable.dx) : "",
+        justificationEval,
+        aiFeedbackText: (fb?.type === "template_fallback") ? "" : aiFeedbackText,
+        showTemplateText: (fb?.type === "template_fallback") ? aiFeedbackText : ""
+      });
+
+      // Similar cases collapsible (show top 2 with selector)
+      const similarCases = api?.similarCases || [];
+      if (similarDetails && similarCases.length > 0) {
+        similarDetails.style.display = "";
+        similarDetails.open = false;
+
+        const selector = $("similarCaseSelector");
+        const similarBox = $("similarCaseBox");
+
+        const maxToShow = Math.min(2, similarCases.length);
+
+        if (selector) {
+          selector.innerHTML = "";
+          for (let i = 0; i < maxToShow; i++) {
+            const opt = document.createElement("option");
+            opt.value = String(i);
+            opt.textContent = `Case ${i + 1} (similarity: ${Math.round((similarCases[i].score || 0) * 100)}%)`;
+            selector.appendChild(opt);
+          }
+          selector.style.display = (maxToShow >= 2) ? "" : "none";
+        }
+
+        const renderSelectedCase = (idx) => {
+          if (!similarBox) return;
+          const c = similarCases[idx] || similarCases[0];
+          const formattedText = (c?.text || "")
+            .split("\n")
+            .map(line => escapeHtml(line))
+            .join("<br>");
+          similarBox.innerHTML = `
+            <div style="font-weight:900;">Similar case</div>
+            <div style="margin-top:6px;line-height:1.6;white-space:pre-wrap;">${formattedText}</div>
+            <div style="margin-top:8px;color:var(--muted);font-size:13px;">Similarity: ${Math.round((c?.score || 0) * 100)}%</div>
+          `;
+        };
+
+        renderSelectedCase(0);
+
+        if (selector && maxToShow >= 2) {
+          selector.onchange = (e) => renderSelectedCase(parseInt(e.target.value, 10) || 0);
+        }
+      }
+
+      logAttempt({
+        timestamp: new Date().toISOString(),
+        student_id: ($("studentId")?.value || "").trim(),
+        scenario_id: scenarioId,
+        scenario_note: scenarioNote,
+        retrieved_top_dx: goldDx,
+        top_similarity: String(sim0?.score ?? ""),
+        student_dx: studentDx,
+        correct: String(correctDx),
+        selected_features: selected.join(";"),
+        missing_features: missing.join(";"),
+        extra_features: extra.join(";"),
+        confusable_dx: confusable?.dx || "",
+        justification
+      });
+    } catch (e) {
+      clearTimeout(timeoutId);
+      console.warn("Backend unreachable, falling back to client-side rubric results.", e);
+
+      // ── Client-side fallback (no AI feedback, TF-IDF similar cases) ──
+      const expected = getDiagnosisFeatureSet(goldDx);
+      const missing = expected.filter(x => !selected.includes(x));
+      const extra = selected.filter(x => !expected.includes(x));
+      const coverage = expected.length ? (expected.length - missing.length) / expected.length : 0;
+      const correctDx = (studentDx === goldDx);
+      const confusable = findConfusableAlternative(selected, goldDx);
+      const expectedLabels = expected.map(nodeLabel);
+      const justificationEval = scoreJustification(justification, expectedLabels);
+
+      const goldDxLabel = nodeLabel(goldDx);
+      const studentDxLabel = nodeLabel(studentDx);
+      const confusableDxLabel = confusable?.dx ? nodeLabel(confusable.dx) : "";
+
+      // Template fallback text (same as server-side fallback)
+      const templateText =
+        `Given the key findings, this presentation is most consistent with ${goldDxLabel}. ` +
+        `This is supported by the core feature pattern; an alternative such as ${confusableDxLabel || "a nearby ICOP category"} ` +
+        `is less likely given the overall feature profile.`;
+
+      // No similar-case retrieval in fallback mode (we do NOT use TF-IDF).
+      const topSim = 0;
+      setKpi("kpiTopSim", "—");
+
+      renderAssessmentResultsAndFeedback({
+        studentDxLabel,
+        goldDxLabel,
+        correctDx,
+        selectedFeatureLabels: selected.map(nodeLabel),
+        missingLabels: missing.map(nodeLabel),
+        extraLabels: extra.map(nodeLabel),
+        coveragePct: Math.round(coverage * 100),
+        topSimPct: Math.round(topSim * 100),
+        confusableDxLabel,
+        justificationEval,
+        aiFeedbackText: "",
+        showTemplateText: templateText
+      });
+
+      // Hide similar cases panel in fallback mode
+      const similarDetails = $("similarCaseDetails");
+      if (similarDetails) similarDetails.style.display = "none";
+
+      // Add a note that AI feedback was unavailable
+      const noteDiv = document.createElement("div");
+      noteDiv.style.cssText = "margin-top:10px;padding:8px 12px;border-radius:10px;background:rgba(255,184,28,0.12);color:#92400e;font-size:13px;font-weight:700;";
+      noteDiv.textContent = "AI feedback unavailable — showing local rubric results.";
+      if (aiBox) aiBox.appendChild(noteDiv);
+
+      logAttempt({
+        timestamp: new Date().toISOString(),
+        student_id: ($("studentId")?.value || "").trim(),
+        scenario_id: scenarioId,
+        scenario_note: scenarioNote,
+        retrieved_top_dx: goldDx,
+        top_similarity: String(topSim),
+        student_dx: studentDx,
+        correct: String(correctDx),
+        selected_features: selected.join(";"),
+        missing_features: missing.join(";"),
+        extra_features: extra.join(";"),
+        confusable_dx: confusable?.dx || "",
+        justification
+      });
+    }
   });
 
   // ---------- Init ----------

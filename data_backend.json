@@ -1,0 +1,137 @@
+{
+  "KG_NODES": [
+    { "id": "icop_2", "label": "ICOP 2: Myofascial orofacial pain", "type": "icop" },
+    { "id": "icop_3", "label": "ICOP 3: Temporomandibular joint (TMJ) pain", "type": "icop" },
+    { "id": "icop_2_1", "label": "ICOP 2.1: Primary myofascial pain", "type": "icop" },
+    { "id": "icop_2_2", "label": "ICOP 2.2: Secondary myofascial pain", "type": "icop" },
+    { "id": "icop_3_1", "label": "ICOP 3.1: Primary TMJ pain", "type": "icop" },
+    { "id": "icop_3_2", "label": "ICOP 3.2: Secondary TMJ pain", "type": "icop" },
+    { "id": "icop_2_1_1", "label": "ICOP 2.1.1: Acute primary myofascial pain", "type": "icop" },
+    { "id": "icop_2_1_2", "label": "ICOP 2.1.2: Chronic primary myofascial pain", "type": "icop" },
+    { "id": "icop_2_2_1", "label": "ICOP 2.2.1: Myofascial pain attributed to tendonitis", "type": "icop" },
+    { "id": "icop_2_2_2", "label": "ICOP 2.2.2: Myofascial pain attributed to myositis", "type": "icop" },
+    { "id": "icop_2_2_3", "label": "ICOP 2.2.3: Myofascial pain attributed to muscle spasm", "type": "icop" },
+    { "id": "icop_3_1_1", "label": "ICOP 3.1.1: Acute primary TMJ pain", "type": "icop" },
+    { "id": "icop_3_1_2", "label": "ICOP 3.1.2: Chronic primary TMJ pain", "type": "icop" },
+    { "id": "icop_3_2_1", "label": "ICOP 3.2.1: TMJ pain attributed to arthritis", "type": "icop" },
+    { "id": "icop_3_2_2", "label": "ICOP 3.2.2: TMJ pain attributed to disc displacement", "type": "icop" },
+    { "id": "icop_3_2_3", "label": "ICOP 3.2.3: TMJ pain attributed to degenerative joint disease", "type": "icop" },
+    { "id": "icop_3_2_4", "label": "ICOP 3.2.4: TMJ pain attributed to subluxation", "type": "icop" },
+    { "id": "icop_3_2_2_1", "label": "ICOP 3.2.2.1: Disc displacement w/ reduction", "type": "icop" },
+    { "id": "icop_3_2_2_1_1", "label": "ICOP 3.2.2.1.1: …with intermittent locking", "type": "icop" },
+    { "id": "icop_3_2_2_2", "label": "ICOP 3.2.2.2: Disc displacement w/o reduction", "type": "icop" },
+    { "id": "icop_3_2_1_1", "label": "ICOP 3.2.1.1: …non-systemic arthritis", "type": "icop" },
+    { "id": "icop_3_2_1_2", "label": "ICOP 3.2.1.2: …systemic arthritis", "type": "icop" },
+
+    { "id": "sx_jaw_pain", "label": "Jaw / preauricular pain", "type": "symptom" },
+    { "id": "sx_preauricular_joint_pain", "label": "Preauricular (joint-localized) pain", "type": "symptom" },
+    { "id": "sx_chewing_worse", "label": "Worse with chewing / function", "type": "symptom" },
+    { "id": "sx_clicking", "label": "Clicking / popping / snapping", "type": "symptom" },
+    { "id": "sx_limited_opening", "label": "Limited mouth opening", "type": "symptom" },
+    { "id": "sx_locking", "label": "Locking / catching (open/close)", "type": "symptom" },
+    { "id": "sx_deviation", "label": "Deviation/deflection on opening", "type": "symptom" },
+    { "id": "sx_joint_tender", "label": "TMJ tenderness on palpation", "type": "symptom" },
+    { "id": "sx_tender_muscle", "label": "Masticatory muscle tenderness", "type": "symptom" },
+    { "id": "sx_morning_stiffness", "label": "Morning stiffness", "type": "symptom" },
+    { "id": "sx_trauma", "label": "History of trauma", "type": "symptom" }
+  ],
+  "KG_EDGES": [
+    { "source": "icop_2", "target": "icop_2_1", "rel": "parent_of" },
+    { "source": "icop_2", "target": "icop_2_2", "rel": "parent_of" },
+    { "source": "icop_3", "target": "icop_3_1", "rel": "parent_of" },
+    { "source": "icop_3", "target": "icop_3_2", "rel": "parent_of" },
+
+    { "source": "icop_2_1", "target": "icop_2_1_1", "rel": "parent_of" },
+    { "source": "icop_2_1", "target": "icop_2_1_2", "rel": "parent_of" },
+    { "source": "icop_2_2", "target": "icop_2_2_1", "rel": "parent_of" },
+    { "source": "icop_2_2", "target": "icop_2_2_2", "rel": "parent_of" },
+    { "source": "icop_2_2", "target": "icop_2_2_3", "rel": "parent_of" },
+
+    { "source": "icop_3_1", "target": "icop_3_1_1", "rel": "parent_of" },
+    { "source": "icop_3_1", "target": "icop_3_1_2", "rel": "parent_of" },
+
+    { "source": "icop_3_2", "target": "icop_3_2_1", "rel": "parent_of" },
+    { "source": "icop_3_2", "target": "icop_3_2_2", "rel": "parent_of" },
+    { "source": "icop_3_2", "target": "icop_3_2_3", "rel": "parent_of" },
+    { "source": "icop_3_2", "target": "icop_3_2_4", "rel": "parent_of" },
+
+    { "source": "icop_3_2_2", "target": "icop_3_2_2_1", "rel": "parent_of" },
+    { "source": "icop_3_2_2_1", "target": "icop_3_2_2_1_1", "rel": "parent_of" },
+    { "source": "icop_3_2_2", "target": "icop_3_2_2_2", "rel": "parent_of" },
+
+    { "source": "icop_3_2_1", "target": "icop_3_2_1_1", "rel": "parent_of" },
+    { "source": "icop_3_2_1", "target": "icop_3_2_1_2", "rel": "parent_of" },
+
+    { "source": "icop_2_1_2", "target": "sx_jaw_pain", "rel": "has_symptom" },
+    { "source": "icop_2_1_2", "target": "sx_chewing_worse", "rel": "has_symptom" },
+    { "source": "icop_2_1_2", "target": "sx_tender_muscle", "rel": "has_symptom" },
+    { "source": "icop_2_1_2", "target": "sx_morning_stiffness", "rel": "has_symptom" },
+
+    { "source": "icop_3_1_2", "target": "sx_preauricular_joint_pain", "rel": "has_symptom" },
+    { "source": "icop_3_1_2", "target": "sx_chewing_worse", "rel": "has_symptom" },
+    { "source": "icop_3_1_2", "target": "sx_joint_tender", "rel": "has_symptom" },
+    { "source": "icop_3_2", "target": "sx_trauma", "rel": "has_symptom" },
+
+    { "source": "icop_3_2_2_1", "target": "sx_clicking", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_1", "target": "sx_chewing_worse", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_1", "target": "sx_deviation", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_1_1", "target": "sx_locking", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_1_1", "target": "sx_limited_opening", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_2", "target": "sx_locking", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_2", "target": "sx_limited_opening", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_2", "target": "sx_chewing_worse", "rel": "has_symptom" },
+    { "source": "icop_3_2_2_1", "target": "sx_trauma", "rel": "has_symptom" },
+
+    { "source": "icop_3_2_1", "target": "sx_preauricular_joint_pain", "rel": "has_symptom" },
+    { "source": "icop_3_2_1", "target": "sx_joint_tender", "rel": "has_symptom" },
+    { "source": "icop_3_2_1", "target": "sx_chewing_worse", "rel": "has_symptom" },
+    { "source": "icop_3_2_3", "target": "sx_preauricular_joint_pain", "rel": "has_symptom" },
+    { "source": "icop_3_2_4", "target": "sx_locking", "rel": "has_symptom" },
+    { "source": "icop_3_2_4", "target": "sx_jaw_pain", "rel": "has_symptom" }
+  ],
+  "CASE_LIBRARY": [
+    {
+      "id": "case_001",
+      "title": "Case 001 (Chronic primary myofascial pain)",
+      "diagnosisNodeId": "icop_2_1_2",
+      "text": "Unilateral jaw pain. Worse with chewing. Morning stiffness. Muscle tenderness. No strong joint noise."
+    },
+    {
+      "id": "case_002",
+      "title": "Case 002 (Disc displacement w/ reduction)",
+      "diagnosisNodeId": "icop_3_2_2_1",
+      "text": "Clicking/popping with opening and chewing. Joint noise prominent. Some deviation on opening."
+    },
+    {
+      "id": "case_003",
+      "title": "Case 003 (Chronic primary TMJ pain)",
+      "diagnosisNodeId": "icop_3_1_2",
+      "text": "Preauricular pain with chewing and palpation. TMJ tenderness. Pain localized to the joint."
+    },
+    {
+      "id": "case_004",
+      "title": "Case 004 (Disc displacement w/ reduction + intermittent locking)",
+      "diagnosisNodeId": "icop_3_2_2_1_1",
+      "text": "Clicking plus intermittent jaw locking with limited opening that unlocks. Function provokes symptoms."
+    },
+    {
+      "id": "case_005",
+      "title": "Case 005 (Dru: popping + deflection + trauma history)",
+      "diagnosisNodeId": "icop_3_2_2_1",
+      "text": "Jaw and ear popping predominantly right side. History of trauma to side of head. Deflection to the right on opening. Pain on right lateral capsule and masseter."
+    },
+    {
+      "id": "case_006",
+      "title": "Case 006 (Follow-up: splint + Botox, partial improvement)",
+      "diagnosisNodeId": "icop_2_1_2",
+      "text": "Follow-up for stabilization splint adjustment. Wears splint most nights; limited benefit. Botox reduced migraines. Overall improvement about 10%. Voluntary opening normal."
+    },
+    {
+      "id": "case_007",
+      "title": "Case 007 (Toni: clicking + episodic difficulty closing)",
+      "diagnosisNodeId": "icop_3_2_2_1_1",
+      "text": "Clicking present. Infrequent wide-opening episodes with difficulty closing and a sense of dislocation. Deviation on opening. Lateral capsule tenderness and multiple muscle tender points."
+    }
+  ]
+}
+
