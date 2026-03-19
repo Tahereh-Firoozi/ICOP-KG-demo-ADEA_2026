@@ -32,6 +32,7 @@
     body{
       margin:0;
       color: var(--ink);
+      color-scheme: light;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       background:
         radial-gradient(1200px 600px at 10% 0%, rgba(0,124,65,0.18), transparent 52%),
@@ -118,10 +119,12 @@
       border-radius: 12px;
       border: 1px solid rgba(15,23,42,0.12);
       background: rgba(255,255,255,0.96);
+      color: var(--ink);
       font-size: 14px;
       outline: none;
       transition: box-shadow .12s ease, border-color .12s ease;
     }
+    select option{ color: var(--ink); background: #fff; }
     select:focus, input:focus, textarea:focus{
       border-color: rgba(0,124,65,0.50);
       box-shadow: 0 0 0 4px rgba(0,124,65,0.14);
@@ -326,6 +329,18 @@
         <div id="aiFeedbackBox" class="card" style="color:var(--muted);">
           Submit to see feedback.
         </div>
+
+        <details id="similarCaseDetails" class="card" style="margin-top:10px; display:none;">
+          <summary style="cursor:pointer;font-weight:950;">Similar cases</summary>
+          <div style="margin-top:10px;">
+            <label style="display:block;font-weight:900;margin-bottom:6px;">Select case to view:</label>
+            <select id="similarCaseSelector" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.12);margin-bottom:10px;">
+              <option value="0">Case 1 (most similar)</option>
+              <option value="1">Case 2</option>
+            </select>
+            <div id="similarCaseBox" style="margin-top:6px;color:var(--muted);line-height:1.6;">—</div>
+          </div>
+        </details>
 
         <div id="feedbackBox" class="subtitle" style="margin-top:10px;"></div>
       </div>
