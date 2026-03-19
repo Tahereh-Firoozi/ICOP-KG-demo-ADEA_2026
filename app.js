@@ -5,7 +5,7 @@
 // ── Backend URL ──────────────────────────────────────────────────────
 // For local development leave empty ("") so fetches go to the same origin.
 // For production (GitHub Pages → Render) set to your Render service URL,
-// e.g. "https://icop-backend.onrender.com"
+// e.g. "https://icop-kg-demo-adea-2026.onrender.com"
 const BACKEND_URL = "";
 
 if (typeof cytoscape === "undefined") throw new Error("Cytoscape is not loaded.");

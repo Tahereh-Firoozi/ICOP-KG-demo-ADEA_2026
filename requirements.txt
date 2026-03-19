@@ -1,6 +1,6 @@
-fastapi==0.115.6
-uvicorn[standard]==0.32.1
-# NOTE: Gemini SDK requires Python 3.10+.
+fastapi==0.110.0
+uvicorn==0.29.0
+requests
 google-genai>=1.0.0
 numpy==2.2.2
 pydantic==2.10.6
