@@ -33,7 +33,6 @@ EMBEDDING_MODEL = "models/gemini-embedding-001"
 GENERATION_MODEL = "gemini-3-flash-preview"
 
 
-# Basic logging setup – adjust level via LOG_LEVEL env var if needed.
 log_level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
 log_level = getattr(logging, log_level_name, logging.INFO)
 logging.basicConfig(
