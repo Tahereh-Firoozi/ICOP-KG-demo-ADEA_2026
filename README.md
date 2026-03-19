@@ -4,7 +4,42 @@ ICOP-KG-demo-ADEA_2026
 Interactive ICOP knowledge-graph and assessment demo for teaching clinical reasoning.  
 The backend is a FastAPI app that provides AI feedback and similar-case retrieval using Gemini and a precomputed embeddings file; the frontend is a static HTML/JS interface for graph exploration and assessment.
 
-This project can be run **locally on localhost** or deployed to **Render** (Python web service).
+This project can be deployed to **Render** (Python web service) or run **locally on localhost**.
+
+---
+
+## Deploying on Render
+
+The repository already includes `render.yaml` configured for a Python web service:
+
+```yaml
+services:
+  - type: web
+    name: icop-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+```
+
+In this demo, the Render service is available at:
+
+- `https://icop-kg-demo-adea-2026.onrender.com`
+
+To **wake up** the Render service (cold-start warmup) and make it faster for students:
+
+1. First open the Render URL in your browser:  
+   - `https://icop-kg-demo-adea-2026.onrender.com`
+ 2. Once the page loads, then open the GitHub Pages frontend (the UI students should use) in another tab:  
+    - `https://tahereh-firoozi.github.io/ICOP-KG-demo-ADEA_2026/assessment.html`
+
+Do **not** use the Render URL UI directly; always use the GitHub Pages frontend.
+
+If you host only the static frontend on GitHub Pages, `app.js` will automatically call the Render backend above; you can override it via:
+
+```js
+window.__ICOP_BACKEND_URL__ = "https://your-service.onrender.com";
+```
 
 ---
 
@@ -62,21 +97,7 @@ No separate static server is needed.
 
 ---
 
-## Deploying on Render
-
-The repository already includes `render.yaml` configured for a Python web service:
-
-```yaml
-services:
-  - type: web
-    name: icop-backend
-    runtime: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
-```
-
-If you host the frontend separately (e.g., GitHub Pages), `app.js` will automatically use `https://icop-kg-demo-adea-2026.onrender.com` as the backend. To change it, either edit `app.js` or set an override before it loads:
+## Notes
 
 ```js
 window.__ICOP_BACKEND_URL__ = "https://your-service.onrender.com";
