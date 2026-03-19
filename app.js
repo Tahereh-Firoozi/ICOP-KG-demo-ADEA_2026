@@ -3,10 +3,29 @@
 // Optional: DEMO_NOTES, CONFUSABLE_MAP
 
 // ── Backend URL ──────────────────────────────────────────────────────
-// For local development leave empty ("") so fetches go to the same origin.
-// For production (GitHub Pages → Render) set to your Render service URL,
-// e.g. "https://icop-kg-demo-adea-2026.onrender.com"
-const BACKEND_URL = "https://icop-kg-demo-adea-2026.onrender.com";
+// This file supports 3 common setups:
+// 1) Local dev (FastAPI serves the static files): use same-origin ("")
+// 2) Render (FastAPI serves the static files): use same-origin ("")
+// 3) GitHub Pages static frontend: call the Render backend URL
+//
+// You can always override in the browser console before app loads via:
+//   window.__ICOP_BACKEND_URL__ = "https://...";   // (no trailing slash)
+function resolveBackendUrl() {
+  const override = (typeof window !== "undefined" && window.__ICOP_BACKEND_URL__) ? String(window.__ICOP_BACKEND_URL__) : "";
+  if (override) return override.replace(/\/+$/, "");
+
+  const host = (typeof window !== "undefined" && window.location && window.location.hostname) ? window.location.hostname : "";
+  // Same-origin when served by FastAPI (localhost or onrender.com custom domain)
+  if (host === "localhost" || host === "127.0.0.1") return "";
+  if (host.endsWith(".onrender.com")) return "";
+
+  // If you're hosting only the static frontend (e.g., GitHub Pages), point to Render:
+  if (host.endsWith(".github.io")) return "https://icop-kg-demo-adea-2026.onrender.com";
+
+  // Default: same-origin.
+  return "";
+}
+const BACKEND_URL = resolveBackendUrl();
 
 if (typeof cytoscape === "undefined") throw new Error("Cytoscape is not loaded.");
 if (typeof KG_NODES === "undefined" || typeof KG_EDGES === "undefined") throw new Error("KG_NODES / KG_EDGES not found.");
