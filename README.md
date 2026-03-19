@@ -48,14 +48,6 @@ For similar-case retrieval, either:
 export EMBEDDINGS_PKL_PATH="/absolute/path/to/embeddings.pkl"
 ```
 
-or
-
-- Let the server download to `/tmp/embeddings.pkl`:
-
-```bash
-export EMBEDDINGS_PKL_URL="https://your-storage/embeddings.pkl"
-```
-
 **4. Run the backend locally**
 
 ```bash
